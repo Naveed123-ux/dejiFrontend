@@ -8,5 +8,5 @@ export default function Schedule() {
         <p className="text-gray-600">Schedule management coming soon...</p>
       </div>
     </div>
-  )
+  );
 }

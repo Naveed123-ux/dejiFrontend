@@ -12,27 +12,57 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthLayout } from "@/components/auth-layout";
+import { toast } from "react-hot-toast";
+import * as yup from "yup";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { register } from "module";
+import { SignIn } from "../_apis/user";
+import { useDispatch } from "react-redux";
+import { login } from "@/store/slices/AuthSlice";
+
+const signInSchema = yup.object().shape({
+  email: yup
+    .string()
+    .min(1, "Email is required")
+    .required()
+    .email("Invalid email format"),
+  password: yup.string().required().min(1, "Password is required"),
+});
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { register, handleSubmit } = useForm({
+    resolver: yupResolver(signInSchema),
   });
   const router = useRouter();
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login submitted:", formData);
-    // Simulate login success and redirect to dashboard
-    router.push("/");
+  const signIn = async (data: yup.InferType<typeof signInSchema>) => {
+    try {
+      setLoading(true);
+      console.log("Login submitted:");
+      toast.loading("Logging in...");
+      const response = await SignIn(data);
+      console.log("Login response:", response);
+      toast.success("Login successful!");
+      document.cookie = `token=${response.access_token}; path=/; max-age=3600`; // Set token in cookie
+      // Simulate login success and redirect to dashboard
+      dispatch(
+        login({
+          user: response.user,
+          token: response.access_token,
+        })
+      );
+      router.push("/");
+    } catch (error) {
+      toast.error("Login failed. Please check your credentials.");
+      console.error("Login error:", error);
+    } finally {
+      toast.dismiss();
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -57,17 +87,15 @@ export default function Login() {
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(signIn)} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
             placeholder="login@gmail.com"
-            value={formData.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            required
             className="h-12  border-none bg-[#f6f6f6] text-black  !placeholder-black"
+            {...register("email")}
           />
         </div>
 
@@ -86,10 +114,8 @@ export default function Login() {
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••••••"
-              value={formData.password}
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              required
               className="h-12 pr-10 border-none bg-[#f6f6f6] !placeholder-black"
+              {...register("password")}
             />
             <button
               type="button"
@@ -109,6 +135,7 @@ export default function Login() {
           <Button
             type="submit"
             className="w-full max-w-[140px] rounded-full h-12 bg-[#3299FF] hover:bg-blue-600 text-white font-medium "
+            disabled={loading}
           >
             LOGIN <span className="ps-3"> →</span>
           </Button>

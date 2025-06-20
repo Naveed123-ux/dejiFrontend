@@ -18,6 +18,7 @@ const config: Config = {
         grey200: "#F9F9FB",
         gray150: "#F6F6F6",
         blue400: "#3299FF",
+        red400: "#FF0000",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -97,7 +98,7 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       screens: {
-        'xs': '475px',
+        xs: "475px",
       },
     },
   },

@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function Registration() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    fullname: "",
     dateOfBirth: "",
     race: "",
     phoneNumber: "",
@@ -52,13 +52,13 @@ export default function Registration() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullname">Full Name</Label>
                 <Input
-                  id="fullName"
+                  id="fullname"
                   placeholder="Aahsham Iqbal"
-                  value={formData.fullName}
+                  value={formData.fullname}
                   onChange={(e) =>
-                    handleInputChange("fullName", e.target.value)
+                    handleInputChange("fullname", e.target.value)
                   }
                   className="bg-gray150 border-none"
                 />

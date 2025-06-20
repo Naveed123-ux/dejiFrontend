@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
+import { logout } from "@/store/slices/AuthSlice";
 import {
   Sidebar,
   SidebarContent,
@@ -22,6 +22,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { log } from "console";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
@@ -274,7 +278,15 @@ const menuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-
+  const dispatch = useDispatch();
+  const router = useRouter();
+  function logOut() {
+    document.cookie;
+    dispatch(logout());
+    toast.success("Logged out successfully!");
+    document.cookie = "token=; path=/; max-age=0";
+    router;
+  }
   return (
     <Sidebar className="bg-gradient-to-b from-blue-400 to-blue-600 border-r-0">
       <SidebarContent className="bg-gradient-to-b from-blue-400 to-blue-600 justify-center border-r-0">
@@ -303,7 +315,10 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <SidebarMenuButton className="text-white hover:bg-white/20 h-16 text-sm justify-center px-4 transition-all duration-200">
+                <SidebarMenuButton
+                  className="text-white hover:bg-white/20 h-16 text-sm justify-center px-4 transition-all duration-200"
+                  onClick={() => logOut()}
+                >
                   <div className="flex flex-col items-center gap-2 py-2">
                     <div className="w-8 h-8 flex items-center justify-center">
                       <LogOut className="h-5 w-5" />

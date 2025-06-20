@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import axios from "axios";
 import {
   Table,
   TableBody,
@@ -21,6 +22,8 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
+import { privateApi } from "@/lib/axios";
+import { PatientRecord } from "../../hooks/types/types";
 
 const patientsData = [
   {
@@ -77,7 +80,29 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("inpatients");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
+  const [patientsData, setPatientsData] = useState<PatientRecord[]>([]);
+  useEffect(() => {
+    const fetchPatientsData = async () => {
+      try {
+        const response = await privateApi.get<PatientRecord[]>("");
+        const patients = response.data.map((patient) => {
+          return {
+            admitted: patient.admitted_date,
+            documents: patient.documents,
+            status: patient.encrypted_data.status,
+            caseId: `ID: ${patient.case_id}`,
+          };
+        });
+        setPatientsData(patients);
+        // Assuming the API returns an array of patients
+        // setPatientsData(response.data);
+      } catch (error) {
+        console.error("Error fetching patients data:", error);
+      }
+    };
 
+    fetchPatientsData();
+  }, []);
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
@@ -186,7 +211,7 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-between mt-4 px-4">
+        {/* <div className="flex items-center justify-between mt-4 px-4">
           <div className="flex items-center">
             <Button
               variant="outline"
@@ -246,7 +271,7 @@ export default function Dashboard() {
             </Select>
             <span className="text-sm text-gray-500">of 34</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

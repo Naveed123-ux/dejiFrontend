@@ -2,16 +2,17 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { Header } from "@/components/header";
+import { Provider } from "react-redux";
+import { store } from "@/store/store"; // ✅ adjust path if needed
+import StoreProvider from "@/components/store-provider";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"], // add only the weights you need
-  style: ["normal", "italic"], // optional
-  variable: "--font-poppins", // optional, if you want to use it as a CSS variable
-  display: "swap", // optional for better performance
+  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-poppins",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,9 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={poppins.className}>
-        <div className="flex min-h-screen w-full">
-          <main className="flex-1  bg-gray-50">{children}</main>
-        </div>
+        {/* ✅ Redux Provider wraps entire app */}
+        <Toaster position="top-right" reverseOrder={false} />
+        <StoreProvider>
+          <div className="flex min-h-screen w-full">
+            <main className="flex-1 bg-gray-50">{children}</main>
+          </div>
+        </StoreProvider>
       </body>
     </html>
   );

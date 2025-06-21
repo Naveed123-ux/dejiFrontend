@@ -85,7 +85,7 @@ const menuItems = [
   },
   {
     title: "Schedule",
-    url: "/schedule",
+    url: "/dashboard/schedule",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -102,7 +102,7 @@ const menuItems = [
   },
   {
     title: "Registration",
-    url: "/registration",
+    url: "/dashboard/registration",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -157,7 +157,7 @@ const menuItems = [
   },
   {
     title: "Referrals",
-    url: "/referrals",
+    url: "/dashboard/referrals",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -189,7 +189,7 @@ const menuItems = [
   },
   {
     title: "Notes",
-    url: "/notes",
+    url: "/dashboard/notes",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -223,7 +223,7 @@ const menuItems = [
   },
   {
     title: "Providers",
-    url: "/providers",
+    url: "/dashboard/providers",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -259,7 +259,7 @@ const menuItems = [
   },
   {
     title: "Settings",
-    url: "/settings",
+    url: "/dashboard/settings",
     icon: (
       <svg
         style={{ width: "28px", height: "29px" }}
@@ -281,11 +281,10 @@ export function AppSidebar() {
   const dispatch = useDispatch();
   const router = useRouter();
   function logOut() {
-    document.cookie;
     dispatch(logout());
     toast.success("Logged out successfully!");
     document.cookie = "token=; path=/; max-age=0";
-    router;
+    router.push("/");
   }
   return (
     <Sidebar className="bg-gradient-to-b from-blue-400 to-blue-600 border-r-0">

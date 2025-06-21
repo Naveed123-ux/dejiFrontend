@@ -41,3 +41,17 @@ export interface Patient {
   status: string | null;
   documents: string | null;
 }
+
+export interface PatientRegistration {
+  fullname: string;
+  dob: string;
+  race: string;
+  phonenumber: string;
+  address: string;
+  veteran: "yes" | "no";
+  active_duty: "yes" | "no";
+  emergencycontact: string;
+  primary_care_provider: string;
+  insuranceid: string;
+  behavioral_health_provider: string;
+}

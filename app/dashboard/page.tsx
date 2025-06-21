@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
@@ -85,9 +85,13 @@ export default function Dashboard() {
   const [pageSize, setPageSize] = useState(2);
   const dispatch = useDispatch<AppDispatch>();
 
+  const didFetch = useRef(false);
+
   useEffect(() => {
-    // Fetch patients data when the component mounts
-    dispatch(fetchPatients());
+    if (!didFetch.current) {
+      dispatch(fetchPatients());
+      didFetch.current = true;
+    }
   }, [dispatch]);
   const {
     data: patientData,

@@ -39,7 +39,9 @@ const patientsSlice = createSlice({
       .addCase(fetchPatients.pending, (state) => {
         state.loading = true;
         state.error = null;
-        toastingId = toast.loading("Loading patients...");
+        if (!toastingId) {
+          toastingId = toast.loading("Loading patients...");
+        }
       })
       .addCase(fetchPatients.fulfilled, (state, action) => {
         state.loading = false;

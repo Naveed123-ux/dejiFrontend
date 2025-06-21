@@ -34,3 +34,10 @@ export interface PatientRecord {
   documents: string;
   encrypted_data: EncryptedData;
 }
+
+export interface Patient {
+  admitted: string | null;
+  case: string | null;
+  status: string | null;
+  documents: string | null;
+}

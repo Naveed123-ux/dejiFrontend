@@ -20,11 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader } from "@/components/ui/Loader";
 import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
-import { privateApi } from "@/lib/axios";
-import { PatientRecord } from "../../hooks/types/types";
+import { Patient } from "@/hooks/types/types";
 
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatients } from "@/store/slices/PatientSlice";
+import { AppDispatch } from "@/store/store";
 const patientsData = [
   {
     admitted: "27 Dec, 2025",
@@ -80,29 +83,18 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("inpatients");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
-  const [patientsData, setPatientsData] = useState<PatientRecord[]>([]);
-  useEffect(() => {
-    const fetchPatientsData = async () => {
-      try {
-        const response = await privateApi.get<PatientRecord[]>("");
-        const patients = response.data.map((patient) => {
-          return {
-            admitted: patient.admitted_date,
-            documents: patient.documents,
-            status: patient.encrypted_data.status,
-            caseId: `ID: ${patient.case_id}`,
-          };
-        });
-        setPatientsData(patients);
-        // Assuming the API returns an array of patients
-        // setPatientsData(response.data);
-      } catch (error) {
-        console.error("Error fetching patients data:", error);
-      }
-    };
+  const dispatch = useDispatch<AppDispatch>();
 
-    fetchPatientsData();
-  }, []);
+  useEffect(() => {
+    // Fetch patients data when the component mounts
+    dispatch(fetchPatients());
+  }, [dispatch]);
+  const {
+    data: patientData,
+    loading,
+    error,
+  } = useSelector((state: any) => state.patients);
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
@@ -179,37 +171,50 @@ export default function Dashboard() {
               <DownArrow />
             </span>
           </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-grey200">
-                <TableHead>ADMITTED</TableHead>
-                <TableHead>CASE</TableHead>
-                <TableHead>STATUS</TableHead>
-                <TableHead>DOCUMENTS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {patientsData.map((patient, index) => (
-                <TableRow key={index} className="border-b-0">
-                  <TableCell className="font-medium">
-                    {patient.admitted}
-                  </TableCell>
-                  <TableCell>{patient.case}</TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(patient.status)}>
-                      {patient.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getDocumentColor(patient.documents)}>
-                      {patient.documents}
-                    </Badge>
-                  </TableCell>
+          {loading ? (
+            <Loader />
+          ) : error ? (
+            <div className="text-red-500 text-center p-4">
+              <p>Error: {error}</p>{" "}
+            </div>
+          ) : patientData.length == 0 ? (
+            <div className="text-gray-500 text-center p-4">
+              <p>No patients found.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-grey200">
+                  <TableHead>ADMITTED</TableHead>
+                  <TableHead>CASE</TableHead>
+                  <TableHead>STATUS</TableHead>
+                  <TableHead>DOCUMENTS</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {patientData.map((patient: Patient, index: number) => (
+                  <TableRow key={index} className="border-b-0">
+                    <TableCell className="font-medium">
+                      {patient.admitted === null ? "N/A" : patient.admitted}
+                    </TableCell>
+                    <TableCell>{patient.case}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(patient.status || "")}>
+                        {patient.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={getDocumentColor(patient.documents || "")}
+                      >
+                        {patient.documents}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
         {/* <div className="flex items-center justify-between mt-4 px-4">
           <div className="flex items-center">

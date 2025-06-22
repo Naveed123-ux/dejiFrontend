@@ -55,3 +55,25 @@ export interface PatientRegistration {
   insuranceid: string;
   behavioral_health_provider: string;
 }
+
+export interface NotesPayload {
+  patient_id: number;
+  all_data: {
+    recent_suicide_attempt: {
+      value: "yes" | "no";
+      details?: string;
+    };
+    recent_intention_self_harm: {
+      value: "yes" | "no";
+      details?: string;
+    };
+    suicidal_ideation: {
+      value: "yes" | "no";
+      plan?: string;
+      intent: "yes" | "no";
+    };
+    past_diagnosis: string[];
+    function: string[];
+    hospitalization_agreement: "yes" | "no";
+  };
+}

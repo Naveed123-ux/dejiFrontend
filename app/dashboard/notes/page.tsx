@@ -2,1303 +2,815 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useForm, Controller } from "react-hook-form";
-import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import toast from "react-hot-toast";
 import { createNote } from "@/app/_apis/patient";
+import { NotesPayload } from "@/hooks/types/types";
 
-// Tab configuration
-const tabs = [
-  { id: "depression-si", label: "Depression/SI", active: true },
-  { id: "depression-hi", label: "Depression/HI", active: false },
-  { id: "psychosis", label: "Psychosis", active: false },
-  { id: "selfcare-deficit", label: "Selfcare Deficit", active: false },
-  { id: "alcohol-benzo", label: "Alcohol Benzo", active: false },
-];
-
-// Define the Yup schema based on the target JSON structure
+// Validation schema
 const notesSchema = yup.object().shape({
-  // Depression/SI section
-  recentSuicideAttempt: yup
-    .object()
-    .shape({
-      value: yup
-        .string()
-        .oneOf(["yes", "no"])
-        .required("Recent suicide attempt is required"),
-      details: yup
-        .string()
-        .when("value", {
-          is: "yes",
-          then: (schema) =>
-            schema.required(
-              "Explanation for suicide attempt is required if 'Yes'"
-            ),
-          otherwise: (schema) =>
-            schema
-              .notRequired()
-              .transform((_, originalValue) =>
-                originalValue === "" ? undefined : originalValue
-              ),
-        })
-        .nullable(),
-    })
-    .required(),
-
-  recentIntentionOfSelfHarm: yup
-    .object()
-    .shape({
-      value: yup
-        .string()
-        .oneOf(["yes", "no"])
-        .required("Recent intention of self harm is required"),
-      details: yup
-        .string()
-        .when("value", {
-          is: "yes",
-          then: (schema) =>
-            schema.required("Explanation for self harm is required if 'Yes'"),
-          otherwise: (schema) =>
-            schema
-              .notRequired()
-              .transform((_, originalValue) =>
-                originalValue === "" ? undefined : originalValue
-              ),
-        })
-        .nullable(),
-    })
-    .required(),
-
-  suicidalIdeation: yup
-    .object()
-    .shape({
-      value: yup
-        .string()
-        .oneOf(["yes", "no"])
-        .required("Suicidal ideation status is required"),
-      plan: yup
-        .string()
-        .when("value", {
-          is: "yes",
-          then: (schema) =>
-            schema.required("Plan for suicidal ideation is required if 'Yes'"),
-          otherwise: (schema) =>
-            schema
-              .notRequired()
-              .transform((_, originalValue) =>
-                originalValue === "" ? undefined : originalValue
-              ),
-        })
-        .nullable(),
-      intent: yup.string().oneOf(["yes", "no"]).default("no"),
-    })
-    .required(),
-
-  // Past Diagnosis section - Associated Symptoms (checkboxes)
-  sleep: yup.boolean(),
-  interest: yup.boolean(),
-  guilt: yup.boolean(),
-  energy: yup.boolean(),
-  concentration: yup.boolean(),
-  appetite: yup.boolean(),
-  anxious: yup.boolean(),
-  irritable: yup.boolean(),
-  worthless: yup.boolean(),
-  hopeless: yup.boolean(),
-  pastDiagnosisSummary: yup
-    .string()
-    .required("Summary of past diagnosis is required."),
-
-  // Function section
-  declineInWorkSchool: yup
-    .string()
-    .oneOf(["yes", "no"])
-    .required("Decline in work/school is required"),
-  selfCareDecline: yup
-    .string()
-    .oneOf(["hygiene", "no"])
-    .required("Self-care decline is required"),
-  unintentionalWeightLoss: yup
-    .string()
-    .oneOf(["yes", "no"])
-    .required("Unintentional weight loss is required"),
-  functionSummary: yup.string().required("Summary of function is required."),
-
-  // Stressors section
-  priorHospitalizationAgreeable: yup
-    .string()
-    .oneOf(["yes", "no"])
-    .required("Hospitalization agreement is required"),
+  patient_id: yup.number().required("Patient ID is required"),
+  recent_suicide_attempt: yup.string().oneOf(["yes", "no"]).required(),
+  suicide_attempt_details: yup.string().when("recent_suicide_attempt", {
+    is: "yes",
+    then: (schema) => schema.required("Details are required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  recent_intention_self_harm: yup.string().oneOf(["yes", "no"]).required(),
+  self_harm_details: yup.string().when("recent_intention_self_harm", {
+    is: "yes",
+    then: (schema) => schema.required("Details are required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  suicidal_ideation: yup.string().oneOf(["yes", "no"]).required(),
+  suicidal_plan: yup.string().when("suicidal_ideation", {
+    is: "yes",
+    then: (schema) => schema.required("Plan details are required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  suicidal_intent: yup.string().oneOf(["yes", "no"]).when("suicidal_ideation", {
+    is: "yes",
+    then: (schema) => schema.required("Intent is required"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  past_diagnosis: yup.array().of(yup.string()).min(1, "At least one diagnosis must be selected"),
+  function_assessment: yup.array().of(yup.string()).min(1, "At least one function must be selected"),
+  hospitalization_agreement: yup.string().oneOf(["yes", "no"]).required(),
 });
 
 type NotesFormData = yup.InferType<typeof notesSchema>;
 
+const pastDiagnosisOptions = [
+  "Depression",
+  "Anxiety Disorder",
+  "Bipolar Disorder",
+  "PTSD",
+  "Schizophrenia",
+  "Substance Use Disorder",
+  "Eating Disorder",
+  "OCD",
+  "ADHD",
+  "Personality Disorder",
+];
+
+const functionOptions = [
+  "Work/School Performance",
+  "Social Relationships",
+  "Family Relationships",
+  "Self-Care",
+  "Financial Management",
+  "Legal Issues",
+  "Housing Stability",
+  "Transportation",
+  "Healthcare Management",
+  "Daily Living Skills",
+];
+
 export default function Notes() {
-  const [activeTab, setActiveTab] = useState("depression-si");
+  const [activeTab, setActiveTab] = useState("suicide-risk");
   const [loading, setLoading] = useState(false);
 
   const {
+    register,
     handleSubmit,
     control,
-    register,
+    watch,
     reset,
     formState: { errors },
   } = useForm<NotesFormData>({
     resolver: yupResolver(notesSchema),
     defaultValues: {
-      recentSuicideAttempt: { value: "no", details: "" },
-      recentIntentionOfSelfHarm: { value: "no", details: "" },
-      suicidalIdeation: { value: "no", plan: "", intent: "no" },
-      sleep: false,
-      interest: false,
-      guilt: false,
-      energy: false,
-      concentration: false,
-      appetite: false,
-      anxious: false,
-      irritable: false,
-      worthless: false,
-      hopeless: false,
-      pastDiagnosisSummary: "",
-      declineInWorkSchool: "no",
-      selfCareDecline: "no",
-      unintentionalWeightLoss: "no",
-      functionSummary: "",
-      priorHospitalizationAgreeable: "no",
+      past_diagnosis: [],
+      function_assessment: [],
     },
   });
 
-  const handleCreateNote = async (data: NotesFormData) => {
-    setLoading(true);
-    toast.loading("Creating note...");
+  const watchSuicideAttempt = watch("recent_suicide_attempt");
+  const watchSelfHarm = watch("recent_intention_self_harm");
+  const watchSuicidalIdeation = watch("suicidal_ideation");
 
+  const onSubmit = async (data: NotesFormData) => {
     try {
-      const symptomKeys = [
-        "sleep",
-        "interest",
-        "guilt",
-        "energy",
-        "concentration",
-        "appetite",
-        "anxious",
-        "irritable",
-        "worthless",
-        "hopeless",
-      ];
+      setLoading(true);
+      toast.loading("Saving notes...");
 
-      const selectedSymptoms: string[] = [];
-      symptomKeys.forEach((key) => {
-        if (data[key as keyof NotesFormData] === true) {
-          selectedSymptoms.push(key.charAt(0).toUpperCase() + key.slice(1));
-        }
-      });
-
-      const pastDiagnosisArray = [...selectedSymptoms];
-      if (data.pastDiagnosisSummary) {
-        pastDiagnosisArray.push(data.pastDiagnosisSummary);
-      }
-
-      const transformedData = {
-        patient_id: 70,
+      const payload: NotesPayload = {
+        patient_id: data.patient_id,
         all_data: {
           recent_suicide_attempt: {
-            value: data.recentSuicideAttempt.value,
-            details: data.recentSuicideAttempt.details || undefined,
+            value: data.recent_suicide_attempt,
+            details: data.suicide_attempt_details,
           },
           recent_intention_self_harm: {
-            value: data.recentIntentionOfSelfHarm.value,
-            details: data.recentIntentionOfSelfHarm.details || undefined,
+            value: data.recent_intention_self_harm,
+            details: data.self_harm_details,
           },
           suicidal_ideation: {
-            value: data.suicidalIdeation.value,
-            plan: data.suicidalIdeation.plan || undefined,
-            intent: data.suicidalIdeation.intent,
+            value: data.suicidal_ideation,
+            plan: data.suicidal_plan,
+            intent: data.suicidal_intent,
           },
-          past_diagnosis: pastDiagnosisArray,
-          function: [data.functionSummary],
-          hospitalization_agreement: data.priorHospitalizationAgreeable,
+          past_diagnosis: data.past_diagnosis,
+          function: data.function_assessment,
+          hospitalization_agreement: data.hospitalization_agreement,
         },
       };
 
-      const response = await createNote(transformedData);
-      toast.success("Note created successfully!");
+      await createNote(payload);
+      toast.success("Notes saved successfully");
       reset();
     } catch (error) {
-      console.error("Error creating note:", error);
-      toast.error(
-        typeof error === "string"
-          ? error
-          : "Failed to create note. Please try again."
-      );
+      console.error("Error saving notes:", error);
+      toast.error(typeof error === "string" ? error : "Failed to save notes");
     } finally {
       setLoading(false);
       toast.dismiss();
     }
   };
 
-  const renderDepressionSI = () => (
-    <form onSubmit={handleSubmit(handleCreateNote)} className="space-y-8">
-      {/* Recent Suicide Attempt */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Recent Suicide Attempt</h3>
-          <Controller
-            name="recentSuicideAttempt.value"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup
-                onValueChange={field.onChange}
-                value={field.value}
-                className="flex gap-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="suicide-yes" />
-                  <Label htmlFor="suicide-yes">Yes</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="suicide-no" />
-                  <Label htmlFor="suicide-no">No</Label>
-                </div>
-              </RadioGroup>
-            )}
-          />
-          {errors.recentSuicideAttempt?.value && (
-            <p className="text-red-500 text-sm">
-              {errors.recentSuicideAttempt.value.message}
-            </p>
-          )}
+  const tabs = [
+    { id: "suicide-risk", label: "Suicide Risk Assessment", icon: "⚠️" },
+    { id: "psychosis", label: "Psychosis Screening", icon: "🧠" },
+    { id: "history", label: "Clinical History", icon: "📋" },
+    { id: "function", label: "Functional Assessment", icon: "⚡" },
+    { id: "treatment", label: "Treatment Planning", icon: "🎯" },
+  ];
+
+  const renderSuicideRisk = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Recent Suicide Attempt
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-            <Textarea
-              {...register("recentSuicideAttempt.details")}
-              className="mt-2 bg-gray-50 border-none min-h-[80px]"
-              placeholder=""
-            />
-            {errors.recentSuicideAttempt?.details && (
-              <p className="text-red-500 text-sm">
-                {errors.recentSuicideAttempt.details.message}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Intention Of Self Harm */}
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Recent Intention Of Self Harm</h3>
-          <Controller
-            name="recentIntentionOfSelfHarm.value"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup
-                onValueChange={field.onChange}
-                value={field.value}
-                className="flex gap-6"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="self-harm-yes" />
-                  <Label htmlFor="self-harm-yes">Yes</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="self-harm-no" />
-                  <Label htmlFor="self-harm-no">No</Label>
-                </div>
-              </RadioGroup>
-            )}
-          />
-          {errors.recentIntentionOfSelfHarm?.value && (
-            <p className="text-red-500 text-sm">
-              {errors.recentIntentionOfSelfHarm.value.message}
-            </p>
-          )}
-          <div>
-            <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-            <Textarea
-              {...register("recentIntentionOfSelfHarm.details")}
-              className="mt-2 bg-gray-50 border-none min-h-[80px]"
-              placeholder=""
-            />
-            {errors.recentIntentionOfSelfHarm?.details && (
-              <p className="text-red-500 text-sm">
-                {errors.recentIntentionOfSelfHarm.details.message}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Suicidal Ideation */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Suicidal Ideation</h3>
-        <Controller
-          name="suicidalIdeation.value"
-          control={control}
-          render={({ field }) => (
-            <RadioGroup
-              onValueChange={field.onChange}
-              value={field.value}
-              className="flex gap-6"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="ideation-yes" />
-                <Label htmlFor="ideation-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="ideation-no" />
-                <Label htmlFor="ideation-no">No</Label>
-              </div>
-            </RadioGroup>
-          )}
-        />
-        {errors.suicidalIdeation?.value && (
-          <p className="text-red-500 text-sm">
-            {errors.suicidalIdeation.value.message}
-          </p>
-        )}
-        <div>
-          <Label className="text-sm text-gray-600">Plan</Label>
-          <Textarea
-            {...register("suicidalIdeation.plan")}
-            className="mt-2 bg-gray-50 border-none min-h-[80px]"
-            placeholder=""
-          />
-          {errors.suicidalIdeation?.plan && (
-            <p className="text-red-500 text-sm">
-              {errors.suicidalIdeation.plan.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Past Diagnosis */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Past Diagnosis</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Associated Symptoms (for reference)</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { key: "sleep", label: "Sleep" },
-                { key: "interest", label: "Interest" },
-                { key: "guilt", label: "Guilt" },
-                { key: "energy", label: "Energy" },
-                { key: "concentration", label: "Concentration" },
-                { key: "appetite", label: "Appetite" },
-                { key: "anxious", label: "Anxious" },
-                { key: "irritable", label: "Irritable" },
-                { key: "worthless", label: "Worthless" },
-                { key: "hopeless", label: "Hopeless" },
-              ].map((item) => (
-                <div key={item.key} className="flex items-center space-x-2">
-                  <Controller
-                    name={item.key as keyof NotesFormData}
-                    control={control}
-                    render={({ field }) => (
-                      <Checkbox
-                        id={item.key}
-                        checked={field.value as boolean}
-                        onCheckedChange={(checked) => field.onChange(checked)}
-                      />
-                    )}
-                  />
-                  <Label htmlFor={item.key} className="text-sm">
-                    {item.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <Label htmlFor="pastDiagnosisSummary" className="text-sm text-gray-600">
-              Summary of Past Diagnosis
+            <Label className="text-sm font-medium">
+              Has the patient made a suicide attempt in the past 30 days?
             </Label>
-            <Textarea
-              id="pastDiagnosisSummary"
-              {...register("pastDiagnosisSummary")}
-              className="mt-2 bg-gray-50 border-none min-h-[120px]"
-              placeholder="Enter summary of past diagnoses here..."
+            <Controller
+              name="recent_suicide_attempt"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-6 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="suicide-attempt-yes" />
+                    <Label htmlFor="suicide-attempt-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="suicide-attempt-no" />
+                    <Label htmlFor="suicide-attempt-no">No</Label>
+                  </div>
+                </RadioGroup>
+              )}
             />
-            {errors.pastDiagnosisSummary && (
-              <p className="text-red-500 text-sm">
-                {errors.pastDiagnosisSummary.message}
+            {errors.recent_suicide_attempt && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.recent_suicide_attempt.message}
               </p>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Function */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Function</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-4">
+          {watchSuicideAttempt === "yes" && (
             <div>
-              <Label className="text-sm">Decline in Work | School:</Label>
-              <Controller
-                name="declineInWorkSchool"
-                control={control}
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex gap-4 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="work-decline-yes" />
-                      <Label htmlFor="work-decline-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="work-decline-no" />
-                      <Label htmlFor="work-decline-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                )}
+              <Label htmlFor="suicide_attempt_details">
+                Please provide details about the suicide attempt
+              </Label>
+              <Textarea
+                id="suicide_attempt_details"
+                {...register("suicide_attempt_details")}
+                placeholder="Describe the method, circumstances, and any medical intervention required..."
+                className="mt-2"
               />
+              {errors.suicide_attempt_details && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.suicide_attempt_details.message}
+                </p>
+              )}
             </div>
+          )}
+        </CardContent>
+      </Card>
 
-            <div>
-              <Label className="text-sm">Self Care Decline:</Label>
-              <Controller
-                name="selfCareDecline"
-                control={control}
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex gap-4 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="hygiene" id="self-care-hygiene" />
-                      <Label htmlFor="self-care-hygiene">Hygiene</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="self-care-no" />
-                      <Label htmlFor="self-care-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                )}
-              />
-            </div>
-
-            <div>
-              <Label className="text-sm">Unintentional Weight Loss:</Label>
-              <Controller
-                name="unintentionalWeightLoss"
-                control={control}
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex gap-4 mt-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="weight-loss-yes" />
-                      <Label htmlFor="weight-loss-yes">Yes</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="weight-loss-no" />
-                      <Label htmlFor="weight-loss-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                )}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <Label htmlFor="functionSummary" className="text-sm text-gray-600">
-              Summary of Function
-            </Label>
-            <Textarea
-              id="functionSummary"
-              {...register("functionSummary")}
-              className="mt-2 bg-gray-50 border-none min-h-[120px]"
-              placeholder="Enter summary of functional issues here..."
-            />
-            {errors.functionSummary && (
-              <p className="text-red-500 text-sm">
-                {errors.functionSummary.message}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Stressors */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Stressors</h3>
-        <div>
-          <Label className="text-sm">Pt or Guardian Agreeable with Hospitalization:</Label>
-          <Controller
-            name="priorHospitalizationAgreeable"
-            control={control}
-            render={({ field }) => (
-              <RadioGroup
-                onValueChange={field.onChange}
-                value={field.value}
-                className="flex gap-4 mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="yes" id="hospitalization-yes" />
-                  <Label htmlFor="hospitalization-yes">Yes</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="no" id="hospitalization-no" />
-                  <Label htmlFor="hospitalization-no">No</Label>
-                </div>
-              </RadioGroup>
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-6">
-        <Button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2"
-          disabled={loading}
-        >
-          {loading ? "CREATING..." : "CREATE NOTE"}
-        </Button>
-      </div>
-    </form>
-  );
-
-  const renderDepressionHI = () => (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Depression/HI:</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Suicide Attempt */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Recent Suicide Attempt</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="hi-suicide-yes" />
-                <Label htmlFor="hi-suicide-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="hi-suicide-no" />
-                <Label htmlFor="hi-suicide-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
-          </div>
-
-          {/* Recent Intention Of Self Harm */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Recent Intention Of Self Harm</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="hi-harm-yes" />
-                <Label htmlFor="hi-harm-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="hi-harm-no" />
-                <Label htmlFor="hi-harm-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
-          </div>
-        </div>
-
-        {/* Suicidal Ideation */}
-        <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Suicidal Ideation</h3>
-          <RadioGroup className="flex gap-6">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="hi-ideation-yes" />
-              <Label htmlFor="hi-ideation-yes">Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="hi-ideation-no" />
-              <Label htmlFor="hi-ideation-no">No</Label>
-            </div>
-          </RadioGroup>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Self-Harm Intentions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <Label className="text-sm text-gray-600">Plan</Label>
-            <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-          </div>
-        </div>
-      </div>
-
-      {/* Past Diagnosis */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Past Diagnosis</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Associated Symptoms */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Associated Symptoms</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                "Sleep", "Interest", "Guilt", "Energy", 
-                "Concentration", "Appetite", "Anxious", "Irritable", 
-                "Worthless", "Hopeless"
-              ].map((symptom) => (
-                <div key={symptom} className="flex items-center space-x-2">
-                  <Checkbox id={`hi-${symptom.toLowerCase()}`} />
-                  <Label htmlFor={`hi-${symptom.toLowerCase()}`} className="text-sm">
-                    {symptom}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Function */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Function</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-sm">Decline in Work | School:</Label>
-                <RadioGroup className="flex gap-4 mt-2">
+            <Label className="text-sm font-medium">
+              Has the patient expressed recent intentions of self-harm?
+            </Label>
+            <Controller
+              name="recent_intention_self_harm"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-6 mt-2"
+                >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="hi-work-yes" />
-                    <Label htmlFor="hi-work-yes">Yes</Label>
+                    <RadioGroupItem value="yes" id="self-harm-yes" />
+                    <Label htmlFor="self-harm-yes">Yes</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="hi-work-no" />
-                    <Label htmlFor="hi-work-no">No</Label>
+                    <RadioGroupItem value="no" id="self-harm-no" />
+                    <Label htmlFor="self-harm-no">No</Label>
                   </div>
                 </RadioGroup>
+              )}
+            />
+            {errors.recent_intention_self_harm && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.recent_intention_self_harm.message}
+              </p>
+            )}
+          </div>
+
+          {watchSelfHarm === "yes" && (
+            <div>
+              <Label htmlFor="self_harm_details">
+                Please provide details about the self-harm intentions
+              </Label>
+              <Textarea
+                id="self_harm_details"
+                {...register("self_harm_details")}
+                placeholder="Describe the nature of self-harm intentions, frequency, and triggers..."
+                className="mt-2"
+              />
+              {errors.self_harm_details && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.self_harm_details.message}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Suicidal Ideation
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">
+              Is the patient currently experiencing suicidal ideation?
+            </Label>
+            <Controller
+              name="suicidal_ideation"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-6 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="ideation-yes" />
+                    <Label htmlFor="ideation-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="ideation-no" />
+                    <Label htmlFor="ideation-no">No</Label>
+                  </div>
+                </RadioGroup>
+              )}
+            />
+            {errors.suicidal_ideation && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.suicidal_ideation.message}
+              </p>
+            )}
+          </div>
+
+          {watchSuicidalIdeation === "yes" && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="suicidal_plan">
+                  Does the patient have a specific plan?
+                </Label>
+                <Textarea
+                  id="suicidal_plan"
+                  {...register("suicidal_plan")}
+                  placeholder="Describe any specific plans, methods, or preparations..."
+                  className="mt-2"
+                />
+                {errors.suicidal_plan && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.suicidal_plan.message}
+                  </p>
+                )}
               </div>
 
               <div>
-                <Label className="text-sm">Self Care Decline:</Label>
-                <RadioGroup className="flex gap-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="hygiene" id="hi-hygiene" />
-                    <Label htmlFor="hi-hygiene">Hygiene</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="hi-hygiene-no" />
-                    <Label htmlFor="hi-hygiene-no">No</Label>
-                  </div>
-                </RadioGroup>
+                <Label className="text-sm font-medium">
+                  Does the patient have intent to act on these thoughts?
+                </Label>
+                <Controller
+                  name="suicidal_intent"
+                  control={control}
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex space-x-6 mt-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="intent-yes" />
+                        <Label htmlFor="intent-yes">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="intent-no" />
+                        <Label htmlFor="intent-no">No</Label>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                {errors.suicidal_intent && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.suicidal_intent.message}
+                  </p>
+                )}
               </div>
-
-              <div>
-                <Label className="text-sm">Unintentional Weight Loss:</Label>
-                <RadioGroup className="flex gap-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="yes" id="hi-weight-yes" />
-                    <Label htmlFor="hi-weight-yes">Yes</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="no" id="hi-weight-no" />
-                    <Label htmlFor="hi-weight-no">No</Label>
-                  </div>
-                </RadioGroup>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stressors */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Stressors</h3>
-        <div>
-          <Label className="text-sm">Pt or Guardian Agreeable with Hospitalization:</Label>
-          <RadioGroup className="flex gap-4 mt-2">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="yes" id="hi-hospital-yes" />
-              <Label htmlFor="hi-hospital-yes">Yes</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="no" id="hi-hospital-no" />
-              <Label htmlFor="hi-hospital-no">No</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-6">
-        <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2">
-          CREATE NOTE
-        </Button>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 
   const renderPsychosis = () => (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Psychosis :</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Auditory Hallucinations */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Auditory Hallucinations:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="auditory-yes" />
-                <Label htmlFor="auditory-yes">Yes</Label>
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Psychosis Screening Assessment
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-900">Hallucinations</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="auditory-hallucinations" />
+                  <Label htmlFor="auditory-hallucinations" className="text-sm">
+                    Auditory hallucinations (hearing voices)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="visual-hallucinations" />
+                  <Label htmlFor="visual-hallucinations" className="text-sm">
+                    Visual hallucinations (seeing things)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="tactile-hallucinations" />
+                  <Label htmlFor="tactile-hallucinations" className="text-sm">
+                    Tactile hallucinations (feeling things)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="olfactory-hallucinations" />
+                  <Label htmlFor="olfactory-hallucinations" className="text-sm">
+                    Olfactory hallucinations (smelling things)
+                  </Label>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="auditory-no" />
-                <Label htmlFor="auditory-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
             </div>
-          </div>
 
-          {/* Visual Hallucinations */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Visual Hallucinations:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="visual-yes" />
-                <Label htmlFor="visual-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="visual-no" />
-                <Label htmlFor="visual-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Paranoid Delusions */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Paranoid Delusions Or Ideas Of Reference:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="paranoid-yes" />
-                <Label htmlFor="paranoid-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="paranoid-no" />
-                <Label htmlFor="paranoid-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">Details..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
-          </div>
-
-          {/* Disorganized Behavior */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Disorganized Behavior Or Speech:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="disorganized-yes" />
-                <Label htmlFor="disorganized-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="disorganized-no" />
-                <Label htmlFor="disorganized-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">Details..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Past Diagnosis */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Past Diagnosis</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Medication Compliance */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Medication Compliance:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="compliant" id="med-compliant" />
-                <Label htmlFor="med-compliant" className="text-sm">Compliant</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="noncompliant" id="med-noncompliant" />
-                <Label htmlFor="med-noncompliant" className="text-sm">Noncompliant</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="unknown" id="med-unknown" />
-                <Label htmlFor="med-unknown" className="text-sm">Unknown</Label>
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-900">Delusions</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="persecution-delusions" />
+                  <Label htmlFor="persecution-delusions" className="text-sm">
+                    Persecutory delusions
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="grandiose-delusions" />
+                  <Label htmlFor="grandiose-delusions" className="text-sm">
+                    Grandiose delusions
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="reference-delusions" />
+                  <Label htmlFor="reference-delusions" className="text-sm">
+                    Delusions of reference
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="control-delusions" />
+                  <Label htmlFor="control-delusions" className="text-sm">
+                    Delusions of control
+                  </Label>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Insight into Illness */}
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Insight into Illness:</h3>
-            <div className="space-y-3">
+            <h3 className="font-medium text-gray-900">Thought Disorders</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="good" id="insight-good" />
-                <Label htmlFor="insight-good" className="text-sm">Good</Label>
+                <Checkbox id="thought-insertion" />
+                <Label htmlFor="thought-insertion" className="text-sm">
+                  Thought insertion
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="limited" id="insight-limited" />
-                <Label htmlFor="insight-limited" className="text-sm">Limited</Label>
+                <Checkbox id="thought-withdrawal" />
+                <Label htmlFor="thought-withdrawal" className="text-sm">
+                  Thought withdrawal
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="insight-none" />
-                <Label htmlFor="insight-none" className="text-sm">None</Label>
+                <Checkbox id="thought-broadcasting" />
+                <Label htmlFor="thought-broadcasting" className="text-sm">
+                  Thought broadcasting
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="disorganized-thinking" />
+                <Label htmlFor="disorganized-thinking" className="text-sm">
+                  Disorganized thinking
+                </Label>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Agreeable With Hospitalization */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Agreeable With Hospitalization:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="psych-hospital-yes" />
-                <Label htmlFor="psych-hospital-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="psych-hospital-no" />
-                <Label htmlFor="psych-hospital-no">No</Label>
-              </div>
-            </RadioGroup>
+          <div>
+            <Label htmlFor="psychosis-details">Additional Notes</Label>
+            <Textarea
+              id="psychosis-details"
+              placeholder="Describe any additional psychotic symptoms, onset, duration, and severity..."
+              className="mt-2"
+            />
           </div>
-
-          {/* Functional Impact */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Functional Impact:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="inability-care" id="inability-care" />
-                <Label htmlFor="inability-care" className="text-sm">Inability To Care For Self</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="unsafe-home" id="unsafe-home" />
-                <Label htmlFor="unsafe-home" className="text-sm">Unsafe In Home</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="threat-others" id="threat-others" />
-                <Label htmlFor="threat-others" className="text-sm">Threat To Others</Label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-6">
-        <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2">
-          CREATE NOTE
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
-  const renderSelfcareDeficit = () => (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Selfcare Deficit:</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Hygiene Neglect */}
+  const renderHistory = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Past Psychiatric Diagnoses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Hygiene Neglect:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="hygiene-yes" />
-                <Label htmlFor="hygiene-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="hygiene-no" />
-                <Label htmlFor="hygiene-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+            <Label className="text-sm font-medium">
+              Select all applicable past diagnoses:
+            </Label>
+            <Controller
+              name="past_diagnosis"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {pastDiagnosisOptions.map((diagnosis) => (
+                    <div key={diagnosis} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`diagnosis-${diagnosis}`}
+                        checked={field.value?.includes(diagnosis)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange([...(field.value || []), diagnosis]);
+                          } else {
+                            field.onChange(
+                              field.value?.filter((item) => item !== diagnosis)
+                            );
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={`diagnosis-${diagnosis}`}
+                        className="text-sm"
+                      >
+                        {diagnosis}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            />
+            {errors.past_diagnosis && (
+              <p className="text-red-500 text-sm">
+                {errors.past_diagnosis.message}
+              </p>
+            )}
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Unsafe Living Conditions */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Unsafe Living Conditions:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="unsafe-yes" />
-                <Label htmlFor="unsafe-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="unsafe-no" />
-                <Label htmlFor="unsafe-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Treatment History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="previous-medications">Previous Medications</Label>
+            <Textarea
+              id="previous-medications"
+              placeholder="List previous psychiatric medications, dosages, and patient response..."
+              className="mt-2"
+            />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Nutrition Neglect */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Nutrition Neglect / Weight Loss:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="nutrition-yes" />
-                <Label htmlFor="nutrition-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="nutrition-no" />
-                <Label htmlFor="nutrition-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If yes, amount lost: _____ lbs. in _____ weeks..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+          <div>
+            <Label htmlFor="previous-therapy">Previous Therapy</Label>
+            <Textarea
+              id="previous-therapy"
+              placeholder="Describe previous therapy experiences, types, and outcomes..."
+              className="mt-2"
+            />
           </div>
-
-          {/* Cognitive Or Physical Impairment */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Cognitive Or Physical Impairment:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="cognitive-yes" />
-                <Label htmlFor="cognitive-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="cognitive-no" />
-                <Label htmlFor="cognitive-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">Nature..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+          <div>
+            <Label htmlFor="hospitalizations">Previous Hospitalizations</Label>
+            <Textarea
+              id="hospitalizations"
+              placeholder="List previous psychiatric hospitalizations, dates, and reasons..."
+              className="mt-2"
+            />
           </div>
-        </div>
-      </div>
-
-      {/* Past Diagnosis */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Past Diagnosis</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Support System Available */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Support System Available:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="adequate" id="support-adequate" />
-                <Label htmlFor="support-adequate" className="text-sm">Adequate</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="inadequate" id="support-inadequate" />
-                <Label htmlFor="support-inadequate" className="text-sm">Inadequate</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="support-none" />
-                <Label htmlFor="support-none" className="text-sm">None</Label>
-              </div>
-            </div>
-          </div>
-
-          {/* Insight into Illness */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Insight into Illness:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="good" id="selfcare-insight-good" />
-                <Label htmlFor="selfcare-insight-good" className="text-sm">Good</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="limited" id="selfcare-insight-limited" />
-                <Label htmlFor="selfcare-insight-limited" className="text-sm">Limited</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="selfcare-insight-none" />
-                <Label htmlFor="selfcare-insight-none" className="text-sm">None</Label>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Agreeable With Hospitalization */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Agreeable With Hospitalization:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="selfcare-hospital-yes" />
-                <Label htmlFor="selfcare-hospital-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="selfcare-hospital-no" />
-                <Label htmlFor="selfcare-hospital-no">No</Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Functional Impact */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Functional Impact:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="unable-maintain" id="unable-maintain" />
-                <Label htmlFor="unable-maintain" className="text-sm">Unable To Maintain Basic Needs</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="requires-supervision" id="requires-supervision" />
-                <Label htmlFor="requires-supervision" className="text-sm">Requires Supervision</Label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-6">
-        <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2">
-          CREATE NOTE
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
-  const renderAlcoholBenzo = () => (
-    <div className="space-y-8">
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Alcohol Benzo:</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Use of Alcohol or Benzos */}
+  const renderFunction = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Functional Assessment
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Recent Use of Alcohol or Benzos:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="alcohol-use-yes" />
-                <Label htmlFor="alcohol-use-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="alcohol-use-no" />
-                <Label htmlFor="alcohol-use-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+            <Label className="text-sm font-medium">
+              Select areas where the patient is experiencing difficulties:
+            </Label>
+            <Controller
+              name="function_assessment"
+              control={control}
+              render={({ field }) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {functionOptions.map((func) => (
+                    <div key={func} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`function-${func}`}
+                        checked={field.value?.includes(func)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange([...(field.value || []), func]);
+                          } else {
+                            field.onChange(
+                              field.value?.filter((item) => item !== func)
+                            );
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`function-${func}`} className="text-sm">
+                        {func}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            />
+            {errors.function_assessment && (
+              <p className="text-red-500 text-sm">
+                {errors.function_assessment.message}
+              </p>
+            )}
           </div>
+        </CardContent>
+      </Card>
 
-          {/* History of Withdrawal Seizures */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">History of Withdrawal Seizures or Delirium Tremens:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="withdrawal-yes" />
-                <Label htmlFor="withdrawal-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="withdrawal-no" />
-                <Label htmlFor="withdrawal-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">If, Yes then Explain..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Support System
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="family-support">Family Support</Label>
+            <Textarea
+              id="family-support"
+              placeholder="Describe family relationships and support available..."
+              className="mt-2"
+            />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Signs Of Intoxication */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Signs Of Intoxication / Withdrawal:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="intoxication-yes" />
-                <Label htmlFor="intoxication-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="intoxication-no" />
-                <Label htmlFor="intoxication-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">Explain symptoms..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+          <div>
+            <Label htmlFor="social-support">Social Support</Label>
+            <Textarea
+              id="social-support"
+              placeholder="Describe friendships, social connections, and community involvement..."
+              className="mt-2"
+            />
           </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-          {/* Use Impacting Safety */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Use Impacting Safety or Functioning:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="safety-yes" />
-                <Label htmlFor="safety-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="safety-no" />
-                <Label htmlFor="safety-no">No</Label>
-              </div>
-            </RadioGroup>
-            <div>
-              <Label className="text-sm text-gray-600">State Examples..</Label>
-              <Textarea className="mt-2 bg-gray-50 border-none min-h-[80px]" />
-            </div>
+  const renderTreatment = () => (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Hospitalization Agreement
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">
+              Does the patient agree to voluntary hospitalization if recommended?
+            </Label>
+            <Controller
+              name="hospitalization_agreement"
+              control={control}
+              render={({ field }) => (
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-6 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="yes" id="hospitalization-yes" />
+                    <Label htmlFor="hospitalization-yes">Yes</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="no" id="hospitalization-no" />
+                    <Label htmlFor="hospitalization-no">No</Label>
+                  </div>
+                </RadioGroup>
+              )}
+            />
+            {errors.hospitalization_agreement && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.hospitalization_agreement.message}
+              </p>
+            )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Past Diagnosis */}
-      <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Past Diagnosis</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Dual Diagnosis */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Dual Diagnosis (Substance + Mental Health):</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="dual-yes" />
-                <Label htmlFor="dual-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="dual-no" />
-                <Label htmlFor="dual-no">No</Label>
-              </div>
-            </RadioGroup>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-gray-900">
+            Treatment Recommendations
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="medication-recommendations">
+              Medication Recommendations
+            </Label>
+            <Textarea
+              id="medication-recommendations"
+              placeholder="Recommend specific medications, dosages, and monitoring requirements..."
+              className="mt-2"
+            />
           </div>
-
-          {/* Insight into Illness */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Insight into Illness:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="good" id="alcohol-insight-good" />
-                <Label htmlFor="alcohol-insight-good" className="text-sm">Good</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="limited" id="alcohol-insight-limited" />
-                <Label htmlFor="alcohol-insight-limited" className="text-sm">Limited</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="none" id="alcohol-insight-none" />
-                <Label htmlFor="alcohol-insight-none" className="text-sm">None</Label>
-              </div>
-            </div>
+          <div>
+            <Label htmlFor="therapy-recommendations">
+              Therapy Recommendations
+            </Label>
+            <Textarea
+              id="therapy-recommendations"
+              placeholder="Recommend specific therapy types, frequency, and goals..."
+              className="mt-2"
+            />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Agreeable With Hospitalization */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Agreeable With Hospitalization Or Detox Admission:</h3>
-            <RadioGroup className="flex gap-6">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="alcohol-hospital-yes" />
-                <Label htmlFor="alcohol-hospital-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="alcohol-hospital-no" />
-                <Label htmlFor="alcohol-hospital-no">No</Label>
-              </div>
-            </RadioGroup>
+          <div>
+            <Label htmlFor="follow-up-plan">Follow-up Plan</Label>
+            <Textarea
+              id="follow-up-plan"
+              placeholder="Describe follow-up schedule, monitoring plan, and next steps..."
+              className="mt-2"
+            />
           </div>
-
-          {/* Motivated for Detox */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Motivated for Detox / Rehab:</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ambivalent" id="motivated-ambivalent" />
-                <Label htmlFor="motivated-ambivalent" className="text-sm">Ambivalent</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="motivated-yes" />
-                <Label htmlFor="motivated-yes" className="text-sm">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="motivated-no" />
-                <Label htmlFor="motivated-no" className="text-sm">No</Label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end pt-6">
-        <Button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-2">
-          CREATE NOTE
-        </Button>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "depression-si":
-        return renderDepressionSI();
-      case "depression-hi":
-        return renderDepressionHI();
+      case "suicide-risk":
+        return renderSuicideRisk();
       case "psychosis":
         return renderPsychosis();
-      case "selfcare-deficit":
-        return renderSelfcareDeficit();
-      case "alcohol-benzo":
-        return renderAlcoholBenzo();
+      case "history":
+        return renderHistory();
+      case "function":
+        return renderFunction();
+      case "treatment":
+        return renderTreatment();
       default:
-        return renderDepressionSI();
+        return renderSuicideRisk();
     }
   };
 
   return (
-    <div className="space-y-6 p-4 lg:p-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Notes</h1>
-      </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+            Clinical Notes & Assessment
+          </h1>
 
-      <Card>
-        <CardHeader>
-          {/* Tab Navigation */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Patient ID Input */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="max-w-xs">
+                  <Label htmlFor="patient_id">Patient ID</Label>
+                  <Input
+                    id="patient_id"
+                    type="number"
+                    placeholder="Enter patient ID"
+                    {...register("patient_id", { valueAsNumber: true })}
+                    className="mt-2"
+                  />
+                  {errors.patient_id && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.patient_id.message}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 overflow-x-auto">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                      activeTab === tab.id
+                        ? "border-blue-500 text-blue-600 bg-blue-50 rounded-t-lg"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <span className="text-lg">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                    {activeTab === tab.id && (
+                      <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800">
+                        Active
+                      </Badge>
+                    )}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Tab Content */}
+            <div className="mt-6">{renderTabContent()}</div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-6 border-t border-gray-200">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2"
               >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {renderTabContent()}
-        </CardContent>
-      </Card>
+                {loading ? "Saving..." : "Save Assessment"}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

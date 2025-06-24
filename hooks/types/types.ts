@@ -39,22 +39,13 @@ export interface Patient {
   patient_id: number;
   caseId: string;
   name: string;
-  admitted: string | null;
-  case: string | null;
-  status: string | null;
-  documents: string | null;
-}
-
-export interface RefferalPatient {
-  patient_id: number;
-  caseId: string;
-  name: string;
   registration: string;
   admitted: string | null;
-  phonenumber: string;
   case: string | null;
   status: string | null;
   documents: string | null;
+  insuranceID: string;
+  phonenumber: string;
 }
 
 export interface PatientRegistration {

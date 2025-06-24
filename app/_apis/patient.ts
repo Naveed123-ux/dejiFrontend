@@ -74,3 +74,15 @@ export const createAlcoholNote = async (
     throw new Error("Error creating note");
   }
 };
+
+export const changePatientStatus = async (insurnaceID: string) => {
+  try {
+    const response = await privateApi.post(`assign-facility/${insurnaceID}`);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.detail || "accept patient fail");
+    }
+    throw new Error("accept patient fail");
+  }
+};

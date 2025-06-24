@@ -293,7 +293,7 @@ export function AppSidebar() {
       <SidebarContent className="bg-gradient-to-b from-blue-400 to-blue-600 justify-center border-r-0">
         <SidebarGroup className="pt-8">
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-2 ">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title} className="inline-flex">
                   <SidebarMenuButton

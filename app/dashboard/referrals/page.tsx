@@ -1,5 +1,5 @@
 "use client";
-
+import { changePatientStatus } from "@/app/_apis/patient";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,9 +23,10 @@ import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
-import { RefferalPatient } from "@/hooks/types/types";
+import { Patient } from "@/hooks/types/types";
 import { fetchRefferalPatients } from "@/store/slices/RefferalSlice";
 import { Loader } from "@/components/ui/Loader";
+import toast from "react-hot-toast";
 
 export default function Referrals() {
   const [activeTab, setActiveTab] = useState("Pending");
@@ -33,9 +34,11 @@ export default function Referrals() {
   const [pageSize, setPageSize] = useState(2);
   const dispatch = useDispatch<AppDispatch>();
   const dispactPatient = useDispatch();
+  const [accept, setAcceptLoading] = useState(false);
 
   const didFetch = useRef(false);
-  const [patientsData, setPatientsData] = useState<RefferalPatient[]>([]);
+  const [patientsData, setPatientsData] = useState<Patient[]>([]);
+  const { data: patients } = useSelector((state: any) => state.patients);
   const { data, loading, error } = useSelector(
     (state: any) => state.referralPatient
   );
@@ -47,20 +50,31 @@ export default function Referrals() {
     }
     console.log(data);
     if (activeTab === "Accepted") {
-      setPatientsData(
-        data.filter((patient: RefferalPatient) => {
-          return patient.status === "accepted";
-        })
-      );
+      setPatientsData(patients);
     } else {
       setPatientsData(
-        data.filter((patient: RefferalPatient) => {
+        data.filter((patient: Patient) => {
           return patient.status === "pending";
         })
       );
     }
   }, [dispatch, activeTab, data]);
-
+  async function acceptFunction(insuranceID: string) {
+    setAcceptLoading(true);
+    let toastingId;
+    try {
+      toastingId = toast.loading("Accepting Paitent");
+      const response = await changePatientStatus(insuranceID);
+      toast.success("accpet patient succesfully");
+      return response.data;
+    } catch (error) {
+      toast.error(typeof error === "string" ? error : "Accept patient failed");
+    } finally {
+      setAcceptLoading(false);
+      toast.dismiss(toastingId);
+      dispatch(fetchRefferalPatients());
+    }
+  }
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
@@ -86,7 +100,7 @@ export default function Referrals() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 min-w-7xl">
       <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5">
         <div className="p-3 sm:p-4">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-20">
@@ -94,7 +108,7 @@ export default function Referrals() {
               Referrals
             </h1>
 
-            <div className="flex space-x-4 sm:space-x-8 py-1 px-3 sm:px-5 rounded-lg bg-secondary1 w-full lg:w-auto">
+            <div className="flex space-x-4 sm:space-x-8 py-1 px-3 sm:px-5 rounded-lg bg-secondary1 ">
               <button
                 onClick={() => setActiveTab("Pending")}
                 className={`text-[10px] sm:text-[12px] font-medium border-b-2 ${
@@ -119,7 +133,7 @@ export default function Referrals() {
           </div>
         </div>
 
-        <div className="m-2 sm:m-4 py-3 sm:py-5 border border-secondary1 rounded-lg overflow-x-auto">
+        <div className="m-2 sm:m-4 py-3 sm:py-5 border border-secondary1 rounded-lg ">
           {loading ? (
             <Loader />
           ) : error ? (
@@ -131,18 +145,24 @@ export default function Referrals() {
               <p>No patients found.</p>
             </div>
           ) : (
-            <Table className="min-w-full">
-              <TableHeader>
-                <TableRow className="bg-grey200">
+            <Table className="overflow-x-scroll max-md:flex max-md:flex-row">
+              <TableHeader className=" min-w-10 ">
+                <TableRow className="bg-gray-200  max-md:flex max-md:flex-col">
                   <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                     REGISTRATION
                   </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">NAME</TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    NAME
+                  </TableHead>
                   <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                     PHONE NO:
                   </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">CASE</TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">STATUS</TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    CASE
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    STATUS
+                  </TableHead>
                   <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                     DOCUMENTS
                   </TableHead>
@@ -153,55 +173,65 @@ export default function Referrals() {
                   )}
                 </TableRow>
               </TableHeader>
-              <TableBody>
-                {patientsData.map(
-                  (patient: RefferalPatient, index: number) => (
-                    <TableRow key={index} className="border-b-0">
-                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
-                        {patient.registration === null
-                          ? "N/A"
-                          : patient.registration}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                        {patient.name}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                        {patient.phonenumber}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                        {patient.case}
-                      </TableCell>
+              <TableBody className="max-md:flex max-md:flex-row max-w-[50vw] overflow-x-scroll">
+                {patientsData.map((patient: Patient, index: number) => (
+                  <TableRow
+                    key={index}
+                    className="border-b-0 max-md:flex max-md:flex-col"
+                  >
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                      {patient.registration === null
+                        ? "N/A"
+                        : patient.registration}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                      {patient.name}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                      {patient.phonenumber}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                      {patient.case}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Badge
+                        className={`${getStatusColor(
+                          patient.status || ""
+                        )} text-xs`}
+                      >
+                        {patient.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Badge
+                        className={`${getDocumentColor(
+                          patient.documents || ""
+                        )} text-xs`}
+                      >
+                        {patient.documents}
+                      </Badge>
+                    </TableCell>
+                    {activeTab === "Pending" && (
                       <TableCell className="whitespace-nowrap">
-                        <Badge
-                          className={`${getStatusColor(patient.status || "")} text-xs`}
+                        <Button
+                          size="sm"
+                          className="text-xs"
+                          disabled={accept}
+                          onClick={() => acceptFunction(patient.insuranceID)}
                         >
-                          {patient.status}
-                        </Badge>
+                          Accept Patient
+                        </Button>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Badge
-                          className={`${getDocumentColor(
-                            patient.documents || ""
-                          )} text-xs`}
-                        >
-                          {patient.documents}
-                        </Badge>
-                      </TableCell>
-                      {activeTab === "Pending" && (
-                        <TableCell className="whitespace-nowrap">
-                          <Button size="sm" className="text-xs">Accept Patient</Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  )
-                )}
+                    )}
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
         </div>
-        
+
         {/* Pagination */}
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-2 sm:px-4 gap-4">
+        {/* <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-2 sm:px-4 gap-4">
           <div className="flex items-center order-2 sm:order-1">
             <Button
               variant="outline"
@@ -225,7 +255,9 @@ export default function Referrals() {
                   {page}
                 </Button>
               ))}
-              <span className="px-1 sm:px-2 py-1 text-xs text-gray-500">...</span>
+              <span className="px-1 sm:px-2 py-1 text-xs text-gray-500">
+                ...
+              </span>
               <Button
                 variant="outline"
                 size="sm"
@@ -261,7 +293,7 @@ export default function Referrals() {
             </Select>
             <span className="text-xs sm:text-sm text-gray-500">of 34</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ export default function Referrals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
   const dispatch = useDispatch<AppDispatch>();
-  const dispactPatient = useDispatch(); // Typo: Should be `dispatch` if used similarly
+  const dispactPatient = useDispatch();
 
   const didFetch = useRef(false);
   const [patientsData, setPatientsData] = useState<RefferalPatient[]>([]);
@@ -45,8 +45,7 @@ export default function Referrals() {
       dispatch(fetchRefferalPatients());
       didFetch.current = true;
     }
-    console.log(data); // This console.log will run on every render if data changes
-    // Consider using a separate useEffect for filtering data or memoizing `patientsData`
+    console.log(data);
     if (activeTab === "Accepted") {
       setPatientsData(
         data.filter((patient: RefferalPatient) => {
@@ -60,7 +59,7 @@ export default function Referrals() {
         })
       );
     }
-  }, [dispatch, activeTab, data]); // `data` dependency can cause re-renders and re-filtering
+  }, [dispatch, activeTab, data]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -87,20 +86,20 @@ export default function Referrals() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm pb-lg-5 pb-3">
-        <div className="flex items-center lg:gap-20 gap-10 flex-wrap ">
-          <h1 className="text-2xl font-semibold text-gray-900 pl-3 pt-3">
-            Referrals
-          </h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5">
+        <div className="p-3 sm:p-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-20">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              Referrals
+            </h1>
 
-          <div className="flex items-center justify-between p-4 flex-wrap">
-            <div className="flex space-x-8 py-1 px-5 rounded-lg bg-secondary1">
+            <div className="flex space-x-4 sm:space-x-8 py-1 px-3 sm:px-5 rounded-lg bg-secondary1 w-full lg:w-auto">
               <button
                 onClick={() => setActiveTab("Pending")}
-                className={`text-[12px] font-medium border-b-2 ${
+                className={`text-[10px] sm:text-[12px] font-medium border-b-2 ${
                   activeTab === "Pending"
-                    ? "text-white bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-white bg-blue400 py-1 px-2 sm:px-4 rounded-2xl font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -108,9 +107,9 @@ export default function Referrals() {
               </button>
               <button
                 onClick={() => setActiveTab("Accepted")}
-                className={` text-[12px] font-medium border-b-2 ${
+                className={`text-[10px] sm:text-[12px] font-medium border-b-2 ${
                   activeTab === "Accepted"
-                    ? "text-white bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-white bg-blue400 py-1 px-2 sm:px-4 rounded-2xl font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -120,123 +119,117 @@ export default function Referrals() {
           </div>
         </div>
 
-        {/* Apply overflow-x-auto here, directly to the div containing the table or loader/error/no data messages */}
-        <div className="m-4 py-5 border border-secondary1 rounded-lg overflow-x-auto">
+        <div className="m-2 sm:m-4 py-3 sm:py-5 border border-secondary1 rounded-lg overflow-x-auto">
           {loading ? (
             <Loader />
           ) : error ? (
             <div className="text-red-500 text-center p-4">
               <p>Error: {error}</p>{" "}
             </div>
-          ) : patientsData.length === 0 ? ( // Use === for strict comparison
+          ) : patientsData.length === 0 ? (
             <div className="text-gray-500 text-center p-4">
               <p>No patients found.</p>
             </div>
           ) : (
-            // This inner div is no longer needed with overflowX, or it can be a plain div
-            // If <Table> component itself needs styling, you'd apply it there.
-            <div>
-              <Table className="min-w-full">
-                {" "}
-                {/* Add min-w-full here */}
-                <TableHeader>
-                  <TableRow className="bg-grey200">
-                    <TableHead className="whitespace-nowrap">
-                      REGISTRATION
+            <Table className="min-w-full">
+              <TableHeader>
+                <TableRow className="bg-grey200">
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    REGISTRATION
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">NAME</TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    PHONE NO:
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">CASE</TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">STATUS</TableHead>
+                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    DOCUMENTS
+                  </TableHead>
+                  {activeTab === "Pending" && (
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      AcceptPatient
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">NAME</TableHead>
-                    <TableHead className="whitespace-nowrap">
-                      PHONE NO:
-                    </TableHead>
-                    <TableHead className="whitespace-nowrap">CASE</TableHead>
-                    <TableHead className="whitespace-nowrap">STATUS</TableHead>
-                    <TableHead className="whitespace-nowrap">
-                      DOCUMENTS
-                    </TableHead>
-                    {activeTab === "Pending" && (
-                      <TableHead className="whitespace-nowrap">
-                        AcceptPatient
-                      </TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {patientsData.map(
-                    (patient: RefferalPatient, index: number) => (
-                      <TableRow key={index} className="border-b-0">
-                        <TableCell className="font-medium whitespace-nowrap">
-                          {patient.registration === null
-                            ? "N/A"
-                            : patient.registration}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {patient.name}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {patient.phonenumber}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {patient.case}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Badge
-                            className={getStatusColor(patient.status || "")}
-                          >
-                            {patient.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          <Badge
-                            className={getDocumentColor(
-                              patient.documents || ""
-                            )}
-                          >
-                            {patient.documents}
-                          </Badge>
-                        </TableCell>
-                        {activeTab === "Pending" && (
-                          <TableCell className="whitespace-nowrap">
-                            <Button>Accept Patient</Button>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    )
                   )}
-                </TableBody>
-              </Table>
-            </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patientsData.map(
+                  (patient: RefferalPatient, index: number) => (
+                    <TableRow key={index} className="border-b-0">
+                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                        {patient.registration === null
+                          ? "N/A"
+                          : patient.registration}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.name}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.phonenumber}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.case}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge
+                          className={`${getStatusColor(patient.status || "")} text-xs`}
+                        >
+                          {patient.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge
+                          className={`${getDocumentColor(
+                            patient.documents || ""
+                          )} text-xs`}
+                        >
+                          {patient.documents}
+                        </Badge>
+                      </TableCell>
+                      {activeTab === "Pending" && (
+                        <TableCell className="whitespace-nowrap">
+                          <Button size="sm" className="text-xs">Accept Patient</Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
+                )}
+              </TableBody>
+            </Table>
           )}
         </div>
+        
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-4 px-4">
-          <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-2 sm:px-4 gap-4">
+          <div className="flex items-center order-2 sm:order-1">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="h-8 rounded-none"
+              className="h-8 rounded-none text-xs"
             >
-              <ChevronLeft className="h-4 w-4 " />
-              Previous
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Previous</span>
             </Button>
-            <div className="flex ">
+            <div className="flex">
               {[1, 2, 3, 4, 5].map((page) => (
                 <Button
                   key={page}
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
                   onClick={() => setCurrentPage(page)}
-                  className="w-8 h-8 p-0 rounded-none"
+                  className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-none text-xs"
                 >
                   {page}
                 </Button>
               ))}
-              <span className="px-2 py-1 text-sm text-gray-500">...</span>
+              <span className="px-1 sm:px-2 py-1 text-xs text-gray-500">...</span>
               <Button
                 variant="outline"
                 size="sm"
-                className="w-8 h-8 p-0 rounded-none"
+                className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-none text-xs"
               >
                 10
               </Button>
@@ -245,19 +238,19 @@ export default function Referrals() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(currentPage + 1)}
-              className="h-8 rounded-none"
+              className="h-8 rounded-none text-xs"
             >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Page</span>
+          <div className="flex items-center space-x-2 order-1 sm:order-2">
+            <span className="text-xs sm:text-sm text-gray-500">Page</span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => setPageSize(Number(value))}
             >
-              <SelectTrigger className="w-16">
+              <SelectTrigger className="w-12 sm:w-16 h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -266,7 +259,7 @@ export default function Referrals() {
                 <SelectItem value="10">10</SelectItem>
               </SelectContent>
             </Select>
-            <span className="text-sm text-gray-500">of 34</span>
+            <span className="text-xs sm:text-sm text-gray-500">of 34</span>
           </div>
         </div>
       </div>

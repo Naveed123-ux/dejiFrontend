@@ -91,25 +91,25 @@ export default function Dashboard() {
     router.push("/dashboard/notes");
   }
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-normal text-gray-900">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="px-2 sm:px-0">
+        <h1 className="text-lg sm:text-xl font-normal text-gray-900">
           Good Morning!{" "}
-          <span className="text-[#3299FF] font-extrabold text-2xl">
+          <span className="text-[#3299FF] font-extrabold text-xl sm:text-2xl">
             Aahsham Iqbal
           </span>
         </h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm pb-lg-5 pb-3">
-        <div className="">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex space-x-8  py-1 px-2 rounded-lg bg-secondary1">
+      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5">
+        <div className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex space-x-4 sm:space-x-8 py-1 px-2 rounded-lg bg-secondary1 w-full sm:w-auto">
               <button
                 onClick={() => setActiveTab("inpatients")}
-                className={` text-[12px] font-medium border-b-2 ${
+                className={`text-[10px] sm:text-[12px] font-medium border-b-2 ${
                   activeTab === "inpatients"
-                    ? "text-primary200  bg-fullwhite py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-primary200 bg-fullwhite py-1 px-2 sm:px-4 rounded-2xl font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -117,25 +117,25 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => setActiveTab("outpatients")}
-                className={`text-[12px] font-medium border-b-2 ${
+                className={`text-[10px] sm:text-[12px] font-medium border-b-2 ${
                   activeTab === "outpatients"
-                    ? "text-primary200  bg-fullwhite py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-primary200 bg-fullwhite py-1 px-2 sm:px-4 rounded-2xl font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
                 Outpatients
               </button>
             </div>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <Filter />
-              <span className="text-grey100">Filter</span>
+              <span className="text-grey100 ml-2">Filter</span>
             </Button>
           </div>
         </div>
 
-        <div className="m-4 py-5 border border-secondary1 rounded-lg">
-          <div className="flex items-center gap-2 mb-4 px-4">
-            <h2 className="text-lg font-medium text-gray-900">
+        <div className="m-2 sm:m-4 py-3 sm:py-5 border border-secondary1 rounded-lg">
+          <div className="flex items-center gap-2 mb-4 px-2 sm:px-4">
+            <h2 className="text-base sm:text-lg font-medium text-gray-900">
               Patients List{" "}
             </h2>
             <span>
@@ -153,119 +153,62 @@ export default function Dashboard() {
               <p>No patients found.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-grey200">
-                  <TableHead>ADMITTED</TableHead>
-                  <TableHead>CASE</TableHead>
-                  <TableHead>STATUS</TableHead>
-                  <TableHead>DOCUMENTS</TableHead>
-                  {activeTab === "outpatients" && (
-                    <TableHead>AddNote</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patientsData.map((patient: Patient, index: number) => (
-                  <TableRow key={index} className="border-b-0">
-                    <TableCell className="font-medium">
-                      {patient.admitted === null ? "N/A" : patient.admitted}
-                    </TableCell>
-                    <TableCell>{patient.case}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(patient.status || "")}>
-                        {patient.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getDocumentColor(patient.documents || "")}
-                      >
-                        {patient.documents}
-                      </Badge>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table className="min-w-full">
+                <TableHeader>
+                  <TableRow className="bg-grey200">
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">ADMITTED</TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">CASE</TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">STATUS</TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">DOCUMENTS</TableHead>
                     {activeTab === "outpatients" && (
-                      <TableCell>
-                        <Button
-                          onClick={() =>
-                            addNote(
-                              patient.patient_id,
-                              patient.caseId,
-                              patient.name
-                            )
-                          }
-                        >
-                          Add Note
-                        </Button>
-                      </TableCell>
+                      <TableHead className="text-xs sm:text-sm whitespace-nowrap">AddNote</TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {patientsData.map((patient: Patient, index: number) => (
+                    <TableRow key={index} className="border-b-0">
+                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                        {patient.admitted === null ? "N/A" : patient.admitted}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">{patient.case}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge className={`${getStatusColor(patient.status || "")} text-xs`}>
+                          {patient.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge
+                          className={`${getDocumentColor(patient.documents || "")} text-xs`}
+                        >
+                          {patient.documents}
+                        </Badge>
+                      </TableCell>
+                      {activeTab === "outpatients" && (
+                        <TableCell className="whitespace-nowrap">
+                          <Button
+                            onClick={() =>
+                              addNote(
+                                patient.patient_id,
+                                patient.caseId,
+                                patient.name
+                              )
+                            }
+                            size="sm"
+                            className="text-xs"
+                          >
+                            Add Note
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
-        {/* <div className="flex items-center justify-between mt-4 px-4">
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="h-8  rounded-none"
-            >
-              <ChevronLeft className="h-4 w-4 " />
-              Previous
-            </Button>
-            <div className="flex ">
-              {[1, 2, 3, 4, 5].map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className="w-8 h-8 p-0 rounded-none"
-                >
-                  {page}
-                </Button>
-              ))}
-              <span className="px-2 py-1 text-sm text-gray-500">...</span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-8 h-8 p-0 rounded-none"
-              >
-                10
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              className="h-8  rounded-none"
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Page</span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-16">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-gray-500">of 34</span>
-          </div>
-        </div> */}
       </div>
     </div>
   );

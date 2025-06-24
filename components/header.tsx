@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,29 +16,36 @@ import {
 
 export function Header() {
   return (
-    <header className="px-6 py-4">
-      <div className="flex items-center justify-between flex-wrap">
-        <div className="flex-1 max-w-lg bg-[#E5E5E5]  py-1 px-5 rounded-[10px] ">
+    <header className="px-2 sm:px-6 py-4">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        {/* Mobile sidebar trigger */}
+        <div className="flex items-center gap-2 md:hidden">
+          <SidebarTrigger />
+        </div>
+
+        {/* Search bar */}
+        <div className="flex-1 max-w-lg bg-[#E5E5E5] py-1 px-3 sm:px-5 rounded-[10px] order-3 md:order-1 w-full md:w-auto">
           <div className="flex justify-between">
             <Input
               placeholder="Search"
-              className="pl-5 bg-[#E5E5E5] border-0 focus:bg-white focus:ring-2 focus:ring-blue-500"
+              className="pl-2 sm:pl-5 bg-[#E5E5E5] border-0 focus:bg-white focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <div className="flex justify-center items-center">
-              <Search className="w-5 h-5 text-[#A2A3A4] " />
+              <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#A2A3A4]" />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 gap-4">
+        {/* Right side actions */}
+        <div className="flex items-center space-x-2 sm:space-x-4 order-2 md:order-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
                 <Bell
-                  className="h-5 w-5 text-gray-600"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600"
                   style={{ fill: "#0D0D0DBF" }}
                 />
-                <span className="absolute top-[12px] right-[15px] h-1 w-1 bg-red-500 rounded-full"></span>
+                <span className="absolute top-[8px] right-[12px] sm:top-[12px] sm:right-[15px] h-1 w-1 bg-red-500 rounded-full"></span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
@@ -111,17 +119,17 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center space-x-2 hover:bg-gray-100 rounded-lg"
+                className="flex items-center space-x-2 hover:bg-gray-100 rounded-lg h-8 sm:h-10 px-2 sm:px-3"
                 style={{ border: "1px solid #E5E5E5" }}
               >
-                <Avatar className="h-7 w-7">
+                <Avatar className="h-5 w-5 sm:h-7 sm:w-7">
                   <AvatarImage
                     src="/placeholder.svg?height=32&width=32"
                     alt="User"
                   />
                   <AvatarFallback>U1</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:inline">
                   User 001
                 </span>
               </Button>

@@ -6,13 +6,13 @@ import toast from "react-hot-toast";
 
 // patientsSlice.ts
 let toastingId: string | null = null;
-export const fetchPatients = createAsyncThunk<
+export const fetchRefferalPatients = createAsyncThunk<
   Patient[],
   void,
   { rejectValue: string }
->("patients/fetchPatients", async (_, { rejectWithValue }) => {
+>("referrals/fetchRefferalPatients", async (_, { rejectWithValue }) => {
   try {
-    const res = await privateApi.get<PatientRecord[]>("");
+    const res = await privateApi.get<PatientRecord[]>("/unassigned-patients");
     return res.data.map((patient) => ({
       patient_id: patient.id,
       caseId: patient.case_id,
@@ -29,7 +29,7 @@ export const fetchPatients = createAsyncThunk<
   }
 });
 
-const patientsSlice = createSlice({
+const referralPatientSlice = createSlice({
   name: "patients",
   initialState: {
     data: [] as Patient[],
@@ -39,14 +39,14 @@ const patientsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPatients.pending, (state) => {
+      .addCase(fetchRefferalPatients.pending, (state) => {
         state.loading = true;
         state.error = null;
         if (!toastingId) {
           toastingId = toast.loading("Loading patients...");
         }
       })
-      .addCase(fetchPatients.fulfilled, (state, action) => {
+      .addCase(fetchRefferalPatients.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
         toast.success("Patients loaded successfully");
@@ -55,7 +55,7 @@ const patientsSlice = createSlice({
           toastingId = null;
         }
       })
-      .addCase(fetchPatients.rejected, (state, action) => {
+      .addCase(fetchRefferalPatients.rejected, (state, action) => {
         state.loading = false;
         if (toastingId) {
           toast.dismiss(toastingId);
@@ -71,4 +71,4 @@ const patientsSlice = createSlice({
       });
   },
 });
-export default patientsSlice.reducer;
+export default referralPatientSlice.reducer;

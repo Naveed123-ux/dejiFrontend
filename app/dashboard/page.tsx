@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { use, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import axios from "axios";
 import {
@@ -19,85 +19,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+
 import { Loader } from "@/components/ui/Loader";
+import { Button } from "@/components/ui/button";
 import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
 import { Patient } from "@/hooks/types/types";
-
+import { selectPatient } from "@/store/slices/CurrentPatient";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchPatients } from "@/store/slices/PatientSlice";
 import { AppDispatch } from "@/store/store";
-const patientsData = [
-  {
-    admitted: "27 Dec, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Completed",
-  },
-  {
-    admitted: "03 Feb, 2025",
-    case: "ID: 100000404305",
-    status: "Referred",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Registered",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Registered",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Referred",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-];
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("inpatients");
   const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
   const [pageSize, setPageSize] = useState(2);
   const dispatch = useDispatch<AppDispatch>();
+  const dispactPatient = useDispatch();
 
   const didFetch = useRef(false);
+  const [patientsData, setPatientsData] = useState<Patient[]>([]);
+  const { data, loading, error } = useSelector((state: any) => state.patients);
 
   useEffect(() => {
     if (!didFetch.current) {
       dispatch(fetchPatients());
       didFetch.current = true;
     }
-  }, [dispatch]);
-  const {
-    data: patientData,
-    loading,
-    error,
-  } = useSelector((state: any) => state.patients);
+    console.log(data);
+    if (activeTab === "inpatients") {
+      setPatientsData(
+        data.filter((patient: Patient) => {
+          return patient.status === "accepted";
+        })
+      );
+    } else {
+      setPatientsData(
+        data.filter((patient: Patient) => {
+          return patient.status === "pending";
+        })
+      );
+    }
+  }, [dispatch, activeTab, data]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -122,7 +86,10 @@ export default function Dashboard() {
         return "bg-gray-100 text-gray-800";
     }
   };
-
+  function addNote(patientId: number, caseId: string, patientName: string) {
+    dispactPatient(selectPatient({ patientId, caseId, patientName }));
+    router.push("/dashboard/notes");
+  }
   return (
     <div className="space-y-6">
       <div>
@@ -181,7 +148,7 @@ export default function Dashboard() {
             <div className="text-red-500 text-center p-4">
               <p>Error: {error}</p>{" "}
             </div>
-          ) : patientData.length == 0 ? (
+          ) : patientsData.length == 0 ? (
             <div className="text-gray-500 text-center p-4">
               <p>No patients found.</p>
             </div>
@@ -193,10 +160,13 @@ export default function Dashboard() {
                   <TableHead>CASE</TableHead>
                   <TableHead>STATUS</TableHead>
                   <TableHead>DOCUMENTS</TableHead>
+                  {activeTab === "outpatients" && (
+                    <TableHead>AddNote</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {patientData.map((patient: Patient, index: number) => (
+                {patientsData.map((patient: Patient, index: number) => (
                   <TableRow key={index} className="border-b-0">
                     <TableCell className="font-medium">
                       {patient.admitted === null ? "N/A" : patient.admitted}
@@ -214,6 +184,21 @@ export default function Dashboard() {
                         {patient.documents}
                       </Badge>
                     </TableCell>
+                    {activeTab === "outpatients" && (
+                      <TableCell>
+                        <Button
+                          onClick={() =>
+                            addNote(
+                              patient.patient_id,
+                              patient.caseId,
+                              patient.name
+                            )
+                          }
+                        >
+                          Add Note
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,63 +21,44 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
-
-const patientsData = [
-  {
-    admitted: "27 Dec, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Completed",
-  },
-  {
-    admitted: "03 Feb, 2025",
-    case: "ID: 100000404305",
-    status: "Referred",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Registered",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Registered",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Referred",
-    documents: "Completed",
-  },
-  {
-    admitted: "02 Mar, 2025",
-    case: "ID: 100000404305",
-    status: "Accepted",
-    documents: "Pending",
-  },
-];
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { Patient } from "@/hooks/types/types";
+import { fetchRefferalPatients } from "@/store/slices/RefferalSlice";
+import { Loader } from "@/components/ui/Loader";
 
 export default function Referrals() {
-  const [activeTab, setActiveTab] = useState("inpatients");
+  const [activeTab, setActiveTab] = useState("Pending");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
+  const dispatch = useDispatch<AppDispatch>();
+  const dispactPatient = useDispatch();
 
+  const didFetch = useRef(false);
+  const [patientsData, setPatientsData] = useState<Patient[]>([]);
+  const { data, loading, error } = useSelector(
+    (state: any) => state.referralPatient
+  );
+  useEffect(() => {
+    if (!didFetch.current) {
+      dispatch(fetchRefferalPatients());
+      didFetch.current = true;
+    }
+    console.log(data);
+    if (activeTab === "Accepted") {
+      setPatientsData(
+        data.filter((patient: Patient) => {
+          return patient.status === "accepted";
+        })
+      );
+    } else {
+      setPatientsData(
+        data.filter((patient: Patient) => {
+          return patient.status === "pending";
+        })
+      );
+    }
+  }, [dispatch, activeTab, data]);
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
@@ -113,48 +94,82 @@ export default function Referrals() {
           <div className="flex items-center justify-between p-4 flex-wrap">
             <div className="flex space-x-8  py-1 px-5 rounded-lg bg-secondary1">
               <button
-                onClick={() => setActiveTab("inpatients")}
-                className={` text-[12px] font-medium border-b-2 ${
-                  activeTab === "inpatients"
+                onClick={() => setActiveTab("Pending")}
+                className={`text-[12px] font-medium border-b-2 ${
+                  activeTab === "Pending"
                     ? "text-white  bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
-                Inpatients
+                Pending
               </button>
               <button
-                onClick={() => setActiveTab("outpatients")}
-                className={`text-[12px] font-medium border-b-2 ${
-                  activeTab === "outpatients"
+                onClick={() => setActiveTab("Accepted")}
+                className={` text-[12px] font-medium border-b-2 ${
+                  activeTab === "Accepted"
                     ? "text-white  bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
-                Outpatients
+                Accepted
               </button>
             </div>
           </div>
         </div>
 
         <div className="m-4 py-5 border border-secondary1 rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-grey200">
-                <TableHead>CASE</TableHead>
-                <TableHead>CHEIF COMPLAINT</TableHead>
-                <TableHead>FORM</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {patientsData.map((patient, index) => (
-                <TableRow key={index} className="border-b-0">
-                  <TableCell>{patient.case}</TableCell>
-                  <TableCell>{patient.status}</TableCell>
-                  <TableCell>{patient.documents}</TableCell>
+          {loading ? (
+            <Loader />
+          ) : error ? (
+            <div className="text-red-500 text-center p-4">
+              <p>Error: {error}</p>{" "}
+            </div>
+          ) : patientsData.length == 0 ? (
+            <div className="text-gray-500 text-center p-4">
+              <p>No patients found.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-grey200">
+                  <TableHead>ADMITTED</TableHead>
+                  <TableHead>CASE</TableHead>
+                  <TableHead>STATUS</TableHead>
+                  <TableHead>DOCUMENTS</TableHead>
+                  {activeTab === "Pending" && (
+                    <TableHead>AcceptPatient</TableHead>
+                  )}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {patientsData.map((patient: Patient, index: number) => (
+                  <TableRow key={index} className="border-b-0">
+                    <TableCell className="font-medium">
+                      {patient.admitted === null ? "N/A" : patient.admitted}
+                    </TableCell>
+                    <TableCell>{patient.case}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(patient.status || "")}>
+                        {patient.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={getDocumentColor(patient.documents || "")}
+                      >
+                        {patient.documents}
+                      </Badge>
+                    </TableCell>
+                    {activeTab === "Pending" && (
+                      <TableCell>
+                        <Button>Accept Patient</Button>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
         <div className="flex items-center justify-between mt-4 px-4">
           <div className="flex items-center">

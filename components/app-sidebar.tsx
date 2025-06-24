@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logout } from "@/store/slices/AuthSlice";
+import { clearSelectedPatient } from "@/store/slices/CurrentPatient";
 import {
   Sidebar,
   SidebarContent,
@@ -282,6 +283,7 @@ export function AppSidebar() {
   const router = useRouter();
   function logOut() {
     dispatch(logout());
+    dispatch(clearSelectedPatient());
     toast.success("Logged out successfully!");
     document.cookie = "token=; path=/; max-age=0";
     router.push("/");

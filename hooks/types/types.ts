@@ -36,6 +36,9 @@ export interface PatientRecord {
 }
 
 export interface Patient {
+  patient_id: number;
+  caseId: string;
+  name: string;
   admitted: string | null;
   case: string | null;
   status: string | null;
@@ -75,5 +78,61 @@ export interface NotesPayload {
     past_diagnosis: string[];
     function: string[];
     hospitalization_agreement: "yes" | "no";
+  };
+}
+
+export interface PsychosisFormSubmissionData {
+  patient_id: number;
+  all_data: {
+    type: string;
+    agreeableWithHospitalization: "yes" | "no";
+    auditoryHallucinations: "yes" | "no";
+    auditoryHallucinationsExplanation?: string; // Optional because it's only required if 'yes'
+    disorganizedBehavior: "yes" | "no";
+    disorganizedBehaviorDetails?: string; // Optional
+    functionalImpact: "inability-care" | "unsafe-home" | "threat-others";
+    insightIntoIllness: "good" | "limited" | "none";
+    medicationCompliance: "compliant" | "noncompliant" | "unknown";
+    paranoidDelusions: "yes" | "no";
+    paranoidDelusionsDetails?: string; // Optional
+    visualHallucinations: "yes" | "no";
+    visualHallucinationsExplanation?: string;
+  };
+}
+export interface SelfcareDeficitFormSubmissionData {
+  patient_id: number;
+  all_data: {
+    type: string;
+    hygieneNeglect: "yes" | "no";
+    hygieneNeglectExplanation?: string;
+    unsafeLivingConditions: "yes" | "no";
+    unsafeLivingConditionsExplanation?: string;
+    nutritionNeglect: "yes" | "no";
+    nutritionNeglectExplanation?: string;
+    cognitiveOrPhysicalImpairment: "yes" | "no";
+    cognitiveOrPhysicalImpairmentNature?: string;
+    supportSystemAvailable: "adequate" | "inadequate" | "none";
+    selfcareInsightIntoIllness: "good" | "limited" | "none";
+    selfcareAgreeableWithHospitalization: "yes" | "no";
+    selfcareFunctionalImpact: "unable-maintain" | "requires-supervision";
+  };
+}
+
+export interface AlcoholBenzoFormSubmissionData {
+  patient_id: number;
+  all_data: {
+    type: string;
+    recentUseAlcoholBenzos: "yes" | "no";
+    recentUseAlcoholBenzosExplanation?: string;
+    historyWithdrawalSeizures: "yes" | "no";
+    historyWithdrawalSeizuresExplanation?: string;
+    signsIntoxicationWithdrawal: "yes" | "no";
+    signsIntoxicationWithdrawalExplanation?: string;
+    useImpactingSafety: "yes" | "no";
+    useImpactingSafetyExamples?: string;
+    dualDiagnosis: "yes" | "no";
+    alcoholInsightIntoIllness: "good" | "limited" | "none";
+    agreeableWithHospitalizationDetox: "yes" | "no";
+    motivatedForDetoxRehab: "ambivalent" | "yes" | "no";
   };
 }

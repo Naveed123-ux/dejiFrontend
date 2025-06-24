@@ -61,9 +61,10 @@ export default function Registration() {
   const registerPatient = async (
     data: yup.InferType<typeof registrationSchema>
   ) => {
+    let loadingId;
     try {
       setLoading(true);
-      toast.loading("Submitting registration...");
+      loadingId = toast.loading("Submitting registration...");
       const formattedDob = new Date(data.dob).toISOString().split("T")[0];
       const response = await patientRegister({ ...data, dob: formattedDob });
       console.log("Registration submitted:", data);
@@ -74,7 +75,7 @@ export default function Registration() {
     } finally {
       setLoading(false);
       reset();
-      toast.dismiss();
+      toast.dismiss(loadingId);
     }
   };
   return (

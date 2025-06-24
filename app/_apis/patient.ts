@@ -1,5 +1,11 @@
 import { privateApi } from "@/lib/axios";
-import { NotesPayload, PatientRegistration } from "@/hooks/types/types";
+import {
+  NotesPayload,
+  PatientRegistration,
+  PsychosisFormSubmissionData,
+  SelfcareDeficitFormSubmissionData,
+  AlcoholBenzoFormSubmissionData,
+} from "@/hooks/types/types";
 import axios from "axios";
 
 export const patientRegister = async (data: PatientRegistration) => {
@@ -20,6 +26,44 @@ export const patientRegister = async (data: PatientRegistration) => {
 };
 
 export const createNote = async (data: NotesPayload) => {
+  try {
+    const response = await privateApi.post("/add-questionaries", data);
+    response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.detail ?? "error creating note");
+    }
+    throw new Error("Error creating note");
+  }
+};
+export const createSychosisNote = async (data: PsychosisFormSubmissionData) => {
+  try {
+    const response = await privateApi.post("/add-questionaries", data);
+    response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.detail ?? "error creating note");
+    }
+    throw new Error("Error creating note");
+  }
+};
+export const createSelfCareNote = async (
+  data: SelfcareDeficitFormSubmissionData
+) => {
+  try {
+    const response = await privateApi.post("/add-questionaries", data);
+    response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.detail ?? "error creating note");
+    }
+    throw new Error("Error creating note");
+  }
+};
+
+export const createAlcoholNote = async (
+  data: AlcoholBenzoFormSubmissionData
+) => {
   try {
     const response = await privateApi.post("/add-questionaries", data);
     response.data;

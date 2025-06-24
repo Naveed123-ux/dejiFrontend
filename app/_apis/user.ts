@@ -5,7 +5,7 @@ export const SignUp = async (data: SignupFormData) => {
   try {
     const response = await publicApi.post("/signup", {
       ...data,
-      role: "Medical Officer",
+      role: "Facility",
     });
     return response.data;
   } catch (error) {

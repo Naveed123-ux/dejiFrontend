@@ -18,9 +18,11 @@ export const fetchRefferalPatients = createAsyncThunk<
       caseId: patient.case_id,
       name: patient.encrypted_data.fullname,
       admitted: patient.admitted_date,
+      registration: patient.registration_date.split("T")[0],
       documents: patient.documents,
       status: patient.encrypted_data.status,
       case: `ID: ${patient.case_id}`,
+      phonenumber: patient.encrypted_data.phonenumber,
     }));
   } catch (err: any) {
     return rejectWithValue(

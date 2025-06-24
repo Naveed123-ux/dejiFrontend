@@ -45,6 +45,18 @@ export interface Patient {
   documents: string | null;
 }
 
+export interface RefferalPatient {
+  patient_id: number;
+  caseId: string;
+  name: string;
+  registration: string;
+  admitted: string | null;
+  phonenumber: string;
+  case: string | null;
+  status: string | null;
+  documents: string | null;
+}
+
 export interface PatientRegistration {
   fullname: string;
   dob: string;

@@ -23,7 +23,7 @@ import Filter from "@/components/svgs/Filter";
 import DownArrow from "@/components/svgs/DownArrow";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/store/store";
-import { Patient } from "@/hooks/types/types";
+import { RefferalPatient } from "@/hooks/types/types";
 import { fetchRefferalPatients } from "@/store/slices/RefferalSlice";
 import { Loader } from "@/components/ui/Loader";
 
@@ -32,33 +32,36 @@ export default function Referrals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(2);
   const dispatch = useDispatch<AppDispatch>();
-  const dispactPatient = useDispatch();
+  const dispactPatient = useDispatch(); // Typo: Should be `dispatch` if used similarly
 
   const didFetch = useRef(false);
-  const [patientsData, setPatientsData] = useState<Patient[]>([]);
+  const [patientsData, setPatientsData] = useState<RefferalPatient[]>([]);
   const { data, loading, error } = useSelector(
     (state: any) => state.referralPatient
   );
+
   useEffect(() => {
     if (!didFetch.current) {
       dispatch(fetchRefferalPatients());
       didFetch.current = true;
     }
-    console.log(data);
+    console.log(data); // This console.log will run on every render if data changes
+    // Consider using a separate useEffect for filtering data or memoizing `patientsData`
     if (activeTab === "Accepted") {
       setPatientsData(
-        data.filter((patient: Patient) => {
+        data.filter((patient: RefferalPatient) => {
           return patient.status === "accepted";
         })
       );
     } else {
       setPatientsData(
-        data.filter((patient: Patient) => {
+        data.filter((patient: RefferalPatient) => {
           return patient.status === "pending";
         })
       );
     }
-  }, [dispatch, activeTab, data]);
+  }, [dispatch, activeTab, data]); // `data` dependency can cause re-renders and re-filtering
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "accepted":
@@ -92,12 +95,12 @@ export default function Referrals() {
           </h1>
 
           <div className="flex items-center justify-between p-4 flex-wrap">
-            <div className="flex space-x-8  py-1 px-5 rounded-lg bg-secondary1">
+            <div className="flex space-x-8 py-1 px-5 rounded-lg bg-secondary1">
               <button
                 onClick={() => setActiveTab("Pending")}
                 className={`text-[12px] font-medium border-b-2 ${
                   activeTab === "Pending"
-                    ? "text-white  bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-white bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -107,7 +110,7 @@ export default function Referrals() {
                 onClick={() => setActiveTab("Accepted")}
                 className={` text-[12px] font-medium border-b-2 ${
                   activeTab === "Accepted"
-                    ? "text-white  bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
+                    ? "text-white bg-blue400 py-1 px-4 rounded-2xl text-[10px] font-light"
                     : "text-gray-500 border-transparent hover:text-gray-700"
                 }`}
               >
@@ -117,60 +120,94 @@ export default function Referrals() {
           </div>
         </div>
 
-        <div className="m-4 py-5 border border-secondary1 rounded-lg">
+        {/* Apply overflow-x-auto here, directly to the div containing the table or loader/error/no data messages */}
+        <div className="m-4 py-5 border border-secondary1 rounded-lg overflow-x-auto">
           {loading ? (
             <Loader />
           ) : error ? (
             <div className="text-red-500 text-center p-4">
               <p>Error: {error}</p>{" "}
             </div>
-          ) : patientsData.length == 0 ? (
+          ) : patientsData.length === 0 ? ( // Use === for strict comparison
             <div className="text-gray-500 text-center p-4">
               <p>No patients found.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-grey200">
-                  <TableHead>ADMITTED</TableHead>
-                  <TableHead>CASE</TableHead>
-                  <TableHead>STATUS</TableHead>
-                  <TableHead>DOCUMENTS</TableHead>
-                  {activeTab === "Pending" && (
-                    <TableHead>AcceptPatient</TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patientsData.map((patient: Patient, index: number) => (
-                  <TableRow key={index} className="border-b-0">
-                    <TableCell className="font-medium">
-                      {patient.admitted === null ? "N/A" : patient.admitted}
-                    </TableCell>
-                    <TableCell>{patient.case}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(patient.status || "")}>
-                        {patient.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getDocumentColor(patient.documents || "")}
-                      >
-                        {patient.documents}
-                      </Badge>
-                    </TableCell>
+            // This inner div is no longer needed with overflowX, or it can be a plain div
+            // If <Table> component itself needs styling, you'd apply it there.
+            <div>
+              <Table className="min-w-full">
+                {" "}
+                {/* Add min-w-full here */}
+                <TableHeader>
+                  <TableRow className="bg-grey200">
+                    <TableHead className="whitespace-nowrap">
+                      REGISTRATION
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">NAME</TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      PHONE NO:
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">CASE</TableHead>
+                    <TableHead className="whitespace-nowrap">STATUS</TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      DOCUMENTS
+                    </TableHead>
                     {activeTab === "Pending" && (
-                      <TableCell>
-                        <Button>Accept Patient</Button>
-                      </TableCell>
+                      <TableHead className="whitespace-nowrap">
+                        AcceptPatient
+                      </TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {patientsData.map(
+                    (patient: RefferalPatient, index: number) => (
+                      <TableRow key={index} className="border-b-0">
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {patient.registration === null
+                            ? "N/A"
+                            : patient.registration}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {patient.name}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {patient.phonenumber}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {patient.case}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            className={getStatusColor(patient.status || "")}
+                          >
+                            {patient.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <Badge
+                            className={getDocumentColor(
+                              patient.documents || ""
+                            )}
+                          >
+                            {patient.documents}
+                          </Badge>
+                        </TableCell>
+                        {activeTab === "Pending" && (
+                          <TableCell className="whitespace-nowrap">
+                            <Button>Accept Patient</Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    )
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
+        {/* Pagination */}
         <div className="flex items-center justify-between mt-4 px-4">
           <div className="flex items-center">
             <Button
@@ -178,7 +215,7 @@ export default function Referrals() {
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="h-8  rounded-none"
+              className="h-8 rounded-none"
             >
               <ChevronLeft className="h-4 w-4 " />
               Previous
@@ -208,7 +245,7 @@ export default function Referrals() {
               variant="outline"
               size="sm"
               onClick={() => setCurrentPage(currentPage + 1)}
-              className="h-8  rounded-none"
+              className="h-8 rounded-none"
             >
               Next
               <ChevronRight className="h-4 w-4 ml-1" />

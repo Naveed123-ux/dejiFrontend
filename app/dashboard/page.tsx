@@ -29,6 +29,7 @@ import { selectPatient } from "@/store/slices/CurrentPatient";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchPatients } from "@/store/slices/PatientSlice";
 import { AppDispatch } from "@/store/store";
+import { fetchUserInfo } from "@/store/slices/AuthSlice";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("inpatients");
@@ -40,6 +41,8 @@ export default function Dashboard() {
 
   const didFetch = useRef(false);
   const [patientsData, setPatientsData] = useState<Patient[]>([]);
+  const { user } = useSelector((state: any) => state.auth);
+
   const { data, loading, error } = useSelector((state: any) => state.patients);
 
   useEffect(() => {
@@ -96,12 +99,12 @@ export default function Dashboard() {
         <h1 className="text-lg sm:text-xl font-normal text-gray-900">
           Good Morning!{" "}
           <span className="text-[#3299FF] font-extrabold text-xl sm:text-2xl">
-            Aahsham Iqbal
+            {user?.fullname || "..."}
           </span>
         </h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5">
+      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5 max-w-[90%] mx-auto">
         <div className="p-3 sm:p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex space-x-4 sm:space-x-8 py-1 px-2 rounded-lg bg-secondary1 w-full sm:w-auto">
@@ -163,9 +166,9 @@ export default function Dashboard() {
                     <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                       NAME
                     </TableHead>
-                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                    {/* <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                       PHONE NO:
-                    </TableHead>
+                    </TableHead> */}
                     <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                       CASE
                     </TableHead>
@@ -175,7 +178,7 @@ export default function Dashboard() {
                     <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                       DOCUMENTS
                     </TableHead>
-                    {activeTab === "outpatients" && (
+                    {activeTab === "inpatients" && (
                       <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                         AddNote
                       </TableHead>
@@ -186,7 +189,7 @@ export default function Dashboard() {
                   {patientsData.map((patient: Patient, index: number) => (
                     <TableRow
                       key={index}
-                      className="border-b-0 max-md:flex max-md:flex-col"
+                      className="border-b-0 max-md:flex max-md:flex-col justify-center items-center"
                     >
                       <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
                         {patient.registration === null
@@ -196,9 +199,9 @@ export default function Dashboard() {
                       <TableCell className="text-xs sm:text-sm whitespace-nowrap">
                         {patient.name}
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                      {/* <TableCell className="text-xs sm:text-sm whitespace-nowrap">
                         {patient.phonenumber}
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell className="text-xs sm:text-sm whitespace-nowrap">
                         {patient.case}
                       </TableCell>
@@ -211,7 +214,7 @@ export default function Dashboard() {
                           {patient.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
+                      <TableCell className="">
                         <Badge
                           className={`${getDocumentColor(
                             patient.documents || ""
@@ -220,9 +223,9 @@ export default function Dashboard() {
                           {patient.documents}
                         </Badge>
                       </TableCell>
-                      {activeTab === "outpatients" && (
-                        <TableCell className="whitespace-nowrap">
-                          <Button
+                      <TableCell className=" ">
+                        {activeTab === "inpatients" && (
+                          <button
                             onClick={() =>
                               addNote(
                                 patient.patient_id,
@@ -230,13 +233,12 @@ export default function Dashboard() {
                                 patient.name
                               )
                             }
-                            size="sm"
-                            className="text-xs"
+                            className="text-xs bg-blue400 text-white rounded-md px-2 py-2"
                           >
-                            Add Note
-                          </Button>
-                        </TableCell>
-                      )}
+                            AddNote
+                          </button>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

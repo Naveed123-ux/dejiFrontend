@@ -183,8 +183,9 @@ export default function Notes() {
   });
 
   const handleCreateNote = async (data: NotesFormData) => {
+    let toastingId;
     setLoading(true);
-    toast.loading("Creating note...");
+    toastingId = toast.loading("Creating note...");
 
     try {
       const symptomKeys = [
@@ -238,24 +239,34 @@ export default function Notes() {
       toast.success("Note created successfully!");
       reset();
     } catch (error) {
-      console.error("Error creating note:", error);
-      toast.error(
-        typeof error === "string"
-          ? error
-          : "Failed to create note. Please try again."
-      );
+      console.log("Error", error);
+
+      let errorMessage = "Failed to create note. Please try again.";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
-      toast.dismiss();
+      toast.dismiss(toastingId);
     }
   };
 
   const renderDepressionSI = () => (
-    <form onSubmit={handleSubmit(handleCreateNote)} className="space-y-6 sm:space-y-8">
+    <form
+      onSubmit={handleSubmit(handleCreateNote)}
+      className="space-y-6 sm:space-y-8"
+    >
       {/* Recent Suicide Attempt */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900 text-sm sm:text-base">Recent Suicide Attempt</h3>
+          <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+            Recent Suicide Attempt
+          </h3>
           <Controller
             name="recentSuicideAttempt.value"
             control={control}
@@ -267,11 +278,15 @@ export default function Notes() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="suicide-yes" />
-                  <Label htmlFor="suicide-yes" className="text-sm">Yes</Label>
+                  <Label htmlFor="suicide-yes" className="text-sm">
+                    Yes
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="no" id="suicide-no" />
-                  <Label htmlFor="suicide-no" className="text-sm">No</Label>
+                  <Label htmlFor="suicide-no" className="text-sm">
+                    No
+                  </Label>
                 </div>
               </RadioGroup>
             )}
@@ -314,11 +329,15 @@ export default function Notes() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="self-harm-yes" />
-                  <Label htmlFor="self-harm-yes" className="text-sm">Yes</Label>
+                  <Label htmlFor="self-harm-yes" className="text-sm">
+                    Yes
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="no" id="self-harm-no" />
-                  <Label htmlFor="self-harm-no" className="text-sm">No</Label>
+                  <Label htmlFor="self-harm-no" className="text-sm">
+                    No
+                  </Label>
                 </div>
               </RadioGroup>
             )}
@@ -348,7 +367,9 @@ export default function Notes() {
 
       {/* Suicidal Ideation */}
       <div className="space-y-4">
-        <h3 className="font-medium text-gray-900 text-sm sm:text-base">Suicidal Ideation</h3>
+        <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+          Suicidal Ideation
+        </h3>
         <Controller
           name="suicidalIdeation.value"
           control={control}
@@ -360,11 +381,15 @@ export default function Notes() {
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="yes" id="ideation-yes" />
-                <Label htmlFor="ideation-yes" className="text-sm">Yes</Label>
+                <Label htmlFor="ideation-yes" className="text-sm">
+                  Yes
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="no" id="ideation-no" />
-                <Label htmlFor="ideation-no" className="text-sm">No</Label>
+                <Label htmlFor="ideation-no" className="text-sm">
+                  No
+                </Label>
               </div>
             </RadioGroup>
           )}
@@ -391,7 +416,9 @@ export default function Notes() {
 
       {/* Past Diagnosis */}
       <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Past Diagnosis</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          Past Diagnosis
+        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900 text-sm sm:text-base">
@@ -454,11 +481,15 @@ export default function Notes() {
 
       {/* Function */}
       <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Function</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          Function
+        </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           <div className="space-y-4">
             <div>
-              <Label className="text-xs sm:text-sm">Decline in Work | School:</Label>
+              <Label className="text-xs sm:text-sm">
+                Decline in Work | School:
+              </Label>
               <Controller
                 name="declineInWorkSchool"
                 control={control}
@@ -470,11 +501,15 @@ export default function Notes() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="work-decline-yes" />
-                      <Label htmlFor="work-decline-yes" className="text-sm">Yes</Label>
+                      <Label htmlFor="work-decline-yes" className="text-sm">
+                        Yes
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="work-decline-no" />
-                      <Label htmlFor="work-decline-no" className="text-sm">No</Label>
+                      <Label htmlFor="work-decline-no" className="text-sm">
+                        No
+                      </Label>
                     </div>
                   </RadioGroup>
                 )}
@@ -494,11 +529,15 @@ export default function Notes() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="hygiene" id="self-care-hygiene" />
-                      <Label htmlFor="self-care-hygiene" className="text-sm">Hygiene</Label>
+                      <Label htmlFor="self-care-hygiene" className="text-sm">
+                        Hygiene
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="self-care-no" />
-                      <Label htmlFor="self-care-no" className="text-sm">No</Label>
+                      <Label htmlFor="self-care-no" className="text-sm">
+                        No
+                      </Label>
                     </div>
                   </RadioGroup>
                 )}
@@ -506,7 +545,9 @@ export default function Notes() {
             </div>
 
             <div>
-              <Label className="text-xs sm:text-sm">Unintentional Weight Loss:</Label>
+              <Label className="text-xs sm:text-sm">
+                Unintentional Weight Loss:
+              </Label>
               <Controller
                 name="unintentionalWeightLoss"
                 control={control}
@@ -518,11 +559,15 @@ export default function Notes() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="yes" id="weight-loss-yes" />
-                      <Label htmlFor="weight-loss-yes" className="text-sm">Yes</Label>
+                      <Label htmlFor="weight-loss-yes" className="text-sm">
+                        Yes
+                      </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="no" id="weight-loss-no" />
-                      <Label htmlFor="weight-loss-no" className="text-sm">No</Label>
+                      <Label htmlFor="weight-loss-no" className="text-sm">
+                        No
+                      </Label>
                     </div>
                   </RadioGroup>
                 )}
@@ -531,7 +576,10 @@ export default function Notes() {
           </div>
 
           <div className="space-y-4">
-            <Label htmlFor="functionSummary" className="text-xs sm:text-sm text-gray-600">
+            <Label
+              htmlFor="functionSummary"
+              className="text-xs sm:text-sm text-gray-600"
+            >
               Summary of Function
             </Label>
             <Textarea
@@ -551,7 +599,9 @@ export default function Notes() {
 
       {/* Stressors */}
       <div className="space-y-4">
-        <h3 className="font-medium text-gray-900 text-sm sm:text-base">Stressors</h3>
+        <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+          Stressors
+        </h3>
         <div>
           <Label className="text-xs sm:text-sm">
             Pt or Guardian Agreeable with Hospitalization:
@@ -567,11 +617,15 @@ export default function Notes() {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="hospitalization-yes" />
-                  <Label htmlFor="hospitalization-yes" className="text-sm">Yes</Label>
+                  <Label htmlFor="hospitalization-yes" className="text-sm">
+                    Yes
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="no" id="hospitalization-no" />
-                  <Label htmlFor="hospitalization-no" className="text-sm">No</Label>
+                  <Label htmlFor="hospitalization-no" className="text-sm">
+                    No
+                  </Label>
                 </div>
               </RadioGroup>
             )}
@@ -592,9 +646,382 @@ export default function Notes() {
   );
 
   const renderDepressionHI = () => (
-    <form onSubmit={handleSubmit(handleCreateNote)} className="space-y-6 sm:space-y-8">
-      {/* Same structure as renderDepressionSI but with responsive classes */}
-      {/* I'll keep this shorter for brevity, but it follows the same pattern */}
+    <form
+      onSubmit={handleSubmit(handleCreateNote)}
+      className="space-y-6 sm:space-y-8"
+    >
+      {/* Recent Suicide Attempt */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+            Recent Suicide Attempt
+          </h3>
+          <Controller
+            name="recentSuicideAttempt.value"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="flex flex-col sm:flex-row gap-4 sm:gap-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="suicide-yes" />
+                  <Label htmlFor="suicide-yes" className="text-sm">
+                    Yes
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="suicide-no" />
+                  <Label htmlFor="suicide-no" className="text-sm">
+                    No
+                  </Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+          {errors.recentSuicideAttempt?.value && (
+            <p className="text-red-500 text-xs sm:text-sm">
+              {errors.recentSuicideAttempt.value.message}
+            </p>
+          )}
+          <div>
+            <Label className="text-xs sm:text-sm text-gray-600">
+              If, Yes then Explain..
+            </Label>
+            <Textarea
+              {...register("recentSuicideAttempt.details")}
+              className="mt-2 bg-gray-50 border-none min-h-[60px] sm:min-h-[80px] text-sm"
+              placeholder=""
+            />
+            {errors.recentSuicideAttempt?.details && (
+              <p className="text-red-500 text-xs sm:text-sm">
+                {errors.recentSuicideAttempt.details.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Intention Of Self Harm */}
+        <div className="space-y-4">
+          <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+            Recent Intention Of Self Harm
+          </h3>
+          <Controller
+            name="recentIntentionOfSelfHarm.value"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="flex flex-col sm:flex-row gap-4 sm:gap-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="self-harm-yes" />
+                  <Label htmlFor="self-harm-yes" className="text-sm">
+                    Yes
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="self-harm-no" />
+                  <Label htmlFor="self-harm-no" className="text-sm">
+                    No
+                  </Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+          {errors.recentIntentionOfSelfHarm?.value && (
+            <p className="text-red-500 text-xs sm:text-sm">
+              {errors.recentIntentionOfSelfHarm.value.message}
+            </p>
+          )}
+          <div>
+            <Label className="text-xs sm:text-sm text-gray-600">
+              If, Yes then Explain..
+            </Label>
+            <Textarea
+              {...register("recentIntentionOfSelfHarm.details")}
+              className="mt-2 bg-gray-50 border-none min-h-[60px] sm:min-h-[80px] text-sm"
+              placeholder=""
+            />
+            {errors.recentIntentionOfSelfHarm?.details && (
+              <p className="text-red-500 text-xs sm:text-sm">
+                {errors.recentIntentionOfSelfHarm.details.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Suicidal Ideation */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+          Suicidal Ideation
+        </h3>
+        <Controller
+          name="suicidalIdeation.value"
+          control={control}
+          render={({ field }) => (
+            <RadioGroup
+              onValueChange={field.onChange}
+              value={field.value}
+              className="flex flex-col sm:flex-row gap-4 sm:gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="yes" id="ideation-yes" />
+                <Label htmlFor="ideation-yes" className="text-sm">
+                  Yes
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="no" id="ideation-no" />
+                <Label htmlFor="ideation-no" className="text-sm">
+                  No
+                </Label>
+              </div>
+            </RadioGroup>
+          )}
+        />
+        {errors.suicidalIdeation?.value && (
+          <p className="text-red-500 text-xs sm:text-sm">
+            {errors.suicidalIdeation.value.message}
+          </p>
+        )}
+        <div>
+          <Label className="text-xs sm:text-sm text-gray-600">Plan</Label>
+          <Textarea
+            {...register("suicidalIdeation.plan")}
+            className="mt-2 bg-gray-50 border-none min-h-[60px] sm:min-h-[80px] text-sm"
+            placeholder=""
+          />
+          {errors.suicidalIdeation?.plan && (
+            <p className="text-red-500 text-xs sm:text-sm">
+              {errors.suicidalIdeation.plan.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Past Diagnosis */}
+      <div className="space-y-4 sm:space-y-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          Past Diagnosis
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+              Associated Symptoms (for reference)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {[
+                { key: "sleep", label: "Sleep" },
+                { key: "interest", label: "Interest" },
+                { key: "guilt", label: "Guilt" },
+                { key: "energy", label: "Energy" },
+                { key: "concentration", label: "Concentration" },
+                { key: "appetite", label: "Appetite" },
+                { key: "anxious", label: "Anxious" },
+                { key: "irritable", label: "Irritable" },
+                { key: "worthless", label: "Worthless" },
+                { key: "hopeless", label: "Hopeless" },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center space-x-2">
+                  <Controller
+                    name={item.key as keyof NotesFormData}
+                    control={control}
+                    render={({ field }) => (
+                      <Checkbox
+                        id={item.key}
+                        checked={field.value as boolean}
+                        onCheckedChange={(checked) => field.onChange(checked)}
+                      />
+                    )}
+                  />
+                  <Label htmlFor={item.key} className="text-xs sm:text-sm">
+                    {item.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label
+              htmlFor="pastDiagnosisSummary"
+              className="text-xs sm:text-sm text-gray-600"
+            >
+              Summary of Past Diagnosis
+            </Label>
+            <Textarea
+              id="pastDiagnosisSummary"
+              {...register("pastDiagnosisSummary")}
+              className="mt-2 bg-gray-50 border-none min-h-[100px] sm:min-h-[120px] text-sm"
+              placeholder="Enter summary of past diagnoses here..."
+            />
+            {errors.pastDiagnosisSummary && (
+              <p className="text-red-500 text-xs sm:text-sm">
+                {errors.pastDiagnosisSummary.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Function */}
+      <div className="space-y-4 sm:space-y-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+          Function
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs sm:text-sm">
+                Decline in Work | School:
+              </Label>
+              <Controller
+                name="declineInWorkSchool"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="work-decline-yes" />
+                      <Label htmlFor="work-decline-yes" className="text-sm">
+                        Yes
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="work-decline-no" />
+                      <Label htmlFor="work-decline-no" className="text-sm">
+                        No
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs sm:text-sm">Self Care Decline:</Label>
+              <Controller
+                name="selfCareDecline"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="hygiene" id="self-care-hygiene" />
+                      <Label htmlFor="self-care-hygiene" className="text-sm">
+                        Hygiene
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="self-care-no" />
+                      <Label htmlFor="self-care-no" className="text-sm">
+                        No
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs sm:text-sm">
+                Unintentional Weight Loss:
+              </Label>
+              <Controller
+                name="unintentionalWeightLoss"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yes" id="weight-loss-yes" />
+                      <Label htmlFor="weight-loss-yes" className="text-sm">
+                        Yes
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="no" id="weight-loss-no" />
+                      <Label htmlFor="weight-loss-no" className="text-sm">
+                        No
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label
+              htmlFor="functionSummary"
+              className="text-xs sm:text-sm text-gray-600"
+            >
+              Summary of Function
+            </Label>
+            <Textarea
+              id="functionSummary"
+              {...register("functionSummary")}
+              className="mt-2 bg-gray-50 border-none min-h-[100px] sm:min-h-[120px] text-sm"
+              placeholder="Enter summary of functional issues here..."
+            />
+            {errors.functionSummary && (
+              <p className="text-red-500 text-xs sm:text-sm">
+                {errors.functionSummary.message}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stressors */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+          Stressors
+        </h3>
+        <div>
+          <Label className="text-xs sm:text-sm">
+            Pt or Guardian Agreeable with Hospitalization:
+          </Label>
+          <Controller
+            name="priorHospitalizationAgreeable"
+            control={control}
+            render={({ field }) => (
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="hospitalization-yes" />
+                  <Label htmlFor="hospitalization-yes" className="text-sm">
+                    Yes
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="hospitalization-no" />
+                  <Label htmlFor="hospitalization-no" className="text-sm">
+                    No
+                  </Label>
+                </div>
+              </RadioGroup>
+            )}
+          />
+        </div>
+      </div>
+
       <div className="flex justify-center sm:justify-end pt-4 sm:pt-6">
         <Button
           type="submit"
@@ -636,18 +1063,24 @@ export default function Notes() {
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Notes</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+          Notes
+        </h1>
       </div>
       {patientId ? (
         <div className="flex flex-col space-y-2">
           <div className="font-medium text-black text-sm sm:text-base">
             Selected Patient: {patientName}
           </div>
-          <div className="font-medium text-black text-sm sm:text-base">Case ID: {caseId}</div>
+          <div className="font-medium text-black text-sm sm:text-base">
+            Case ID: {caseId}
+          </div>
         </div>
       ) : (
         <div>
-          <div className="font-medium text-black text-sm sm:text-base">No Patient is selected</div>
+          <div className="font-medium text-black text-sm sm:text-base">
+            No Patient is selected
+          </div>
         </div>
       )}
       <Card>

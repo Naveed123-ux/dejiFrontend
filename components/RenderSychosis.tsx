@@ -147,11 +147,15 @@ const RenderSychosis = ({ patientId }: { patientId: number }) => {
       toast.success("Note created successfully!");
     } catch (error) {
       console.error("Error creating note:", error);
-      toast.error(
-        typeof error === "string"
-          ? error
-          : "Failed to create note. Please try again."
-      );
+      let errorMessage = "Failed to create note. Please try again.";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
       toast.dismiss(loadingID);

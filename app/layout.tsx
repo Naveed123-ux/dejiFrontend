@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store/store"; // ✅ adjust path if needed
 import StoreProvider from "@/components/store-provider";
 import { Toaster } from "react-hot-toast";
+import { cn } from "@/lib/utils";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -28,12 +29,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={poppins.className}>
+      <body className={cn(poppins.className)}>
         {/* ✅ Redux Provider wraps entire app */}
         <Toaster position="top-right" reverseOrder={false} />
         <StoreProvider>
-          <div className="flex min-h-screen w-full">
-            <main className="flex-1 bg-gray-50">{children}</main>
+          <div className="flex min-h-screen   w-full">
+            <main className="flex-1 ">{children}</main>
           </div>
         </StoreProvider>
       </body>

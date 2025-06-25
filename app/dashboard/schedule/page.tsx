@@ -69,12 +69,16 @@ const upcomingAppointments = [
 ];
 
 export default function Schedule() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Schedule</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+          Schedule
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -85,12 +89,16 @@ export default function Schedule() {
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h3 className="text-base sm:text-lg font-medium mb-2">Visits for Today</h3>
+                  <h3 className="text-base sm:text-lg font-medium mb-2">
+                    Visits for Today
+                  </h3>
                   <div className="text-3xl sm:text-4xl font-bold mb-4">104</div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                   <div className="text-center">
-                    <div className="text-xs sm:text-sm opacity-90">New Patients</div>
+                    <div className="text-xs sm:text-sm opacity-90">
+                      New Patients
+                    </div>
                     <div className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                       40
                       <div className="flex items-center text-green-300 text-xs sm:text-sm">
@@ -100,7 +108,9 @@ export default function Schedule() {
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-xs sm:text-sm opacity-90">Old Patients</div>
+                    <div className="text-xs sm:text-sm opacity-90">
+                      Old Patients
+                    </div>
                     <div className="text-xl sm:text-2xl font-bold flex items-center gap-2">
                       64
                       <div className="flex items-center text-red-300 text-xs sm:text-sm">
@@ -118,7 +128,9 @@ export default function Schedule() {
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <CardTitle className="text-base sm:text-lg font-medium">Patient List</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-medium">
+                  Patient List
+                </CardTitle>
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                   <Select defaultValue="today">
                     <SelectTrigger className="w-full sm:w-32">
@@ -130,26 +142,34 @@ export default function Schedule() {
                       <SelectItem value="week">This Week</SelectItem>
                     </SelectContent>
                   </Select>
-                  <span className="text-base sm:text-lg font-medium hidden sm:inline">Consultation</span>
+                  <span className="text-base sm:text-lg font-medium hidden sm:inline">
+                    Consultation
+                  </span>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-3 sm:space-y-4 ">
                 {patientList.map((patient) => (
                   <div
                     key={patient.id}
                     className="flex items-center justify-between p-3 sm:p-4 rounded-lg border hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <Avatar className={`${patient.bgColor} text-gray-700 h-8 w-8 sm:h-10 sm:w-10`}>
+                      <Avatar
+                        className={`${patient.bgColor} text-gray-700 h-8 w-8 sm:h-10 sm:w-10`}
+                      >
                         <AvatarFallback className="bg-transparent text-xs sm:text-sm">
                           {patient.initials}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-sm sm:text-base">{patient.name}</div>
-                        <div className="text-xs sm:text-sm text-gray-500">{patient.status}</div>
+                        <div className="font-medium text-sm sm:text-base">
+                          {patient.name}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          {patient.status}
+                        </div>
                       </div>
                     </div>
                     <div className="text-xs sm:text-sm font-medium text-blue-600">
@@ -166,15 +186,23 @@ export default function Schedule() {
             <CardContent className="p-4 sm:p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <h3 className="font-medium mb-4 text-sm sm:text-base">Patient Information</h3>
+                  <h3 className="font-medium mb-4 text-sm sm:text-base">
+                    Patient Information
+                  </h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <Avatar className="bg-gray-100 h-8 w-8 sm:h-10 sm:w-10">
-                        <AvatarFallback className="text-xs sm:text-sm">DW</AvatarFallback>
+                        <AvatarFallback className="text-xs sm:text-sm">
+                          DW
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-sm sm:text-base">Denzel White</div>
-                        <div className="text-xs sm:text-sm text-gray-500">Male • 28 years • 5 months</div>
+                        <div className="font-medium text-sm sm:text-base">
+                          Denzel White
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-500">
+                          Male • 28 years • 5 months
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-3 sm:gap-4 mt-4">
@@ -200,20 +228,29 @@ export default function Schedule() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-medium mb-4 text-sm sm:text-base">Consultation Details</h3>
+                  <h3 className="font-medium mb-4 text-sm sm:text-base">
+                    Consultation Details
+                  </h3>
                   <div className="space-y-3 text-xs sm:text-sm">
                     <div>
                       <span className="text-gray-500">Last Checked:</span>
-                      <span className="ml-2">Dr Emily on 7 April 2024 (Prescription #8 Strength)</span>
+                      <span className="ml-2">
+                        Dr Emily on 7 April 2024 (Prescription #8 Strength)
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Observation:</span>
-                      <span className="ml-2">High fever and cough are normal but might have heart burn</span>
+                      <span className="ml-2">
+                        High fever and cough are normal but might have heart
+                        burn
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Prescription:</span>
                       <span className="ml-2">Paracetamol • 2 times a day</span>
-                      <div className="ml-2 text-gray-500">Disprin • One and half tablets twice daily</div>
+                      <div className="ml-2 text-gray-500">
+                        Disprin • One and half tablets twice daily
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -228,13 +265,17 @@ export default function Schedule() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base sm:text-lg font-medium">Calendar</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-medium">
+                  Calendar
+                </CardTitle>
                 <Select defaultValue="september-2024">
                   <SelectTrigger className="w-32 sm:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="september-2024">September 2024</SelectItem>
+                    <SelectItem value="september-2024">
+                      September 2024
+                    </SelectItem>
                     <SelectItem value="october-2024">October 2024</SelectItem>
                   </SelectContent>
                 </Select>
@@ -254,7 +295,9 @@ export default function Schedule() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base sm:text-lg font-medium">Upcoming</CardTitle>
+                <CardTitle className="text-base sm:text-lg font-medium">
+                  Upcoming
+                </CardTitle>
                 <Button variant="link" className="text-blue-600 p-0 text-sm">
                   View All
                 </Button>
@@ -263,14 +306,19 @@ export default function Schedule() {
             <CardContent>
               <div className="space-y-3">
                 {upcomingAppointments.map((appointment) => (
-                  <div key={appointment.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                  <div
+                    key={appointment.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
+                  >
                     <Avatar className="bg-blue-500 text-white h-8 w-8 sm:h-10 sm:w-10">
                       <AvatarFallback className="bg-blue-500 text-white text-xs sm:text-sm">
                         {appointment.avatar}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="font-medium text-xs sm:text-sm">{appointment.title}</div>
+                      <div className="font-medium text-xs sm:text-sm">
+                        {appointment.title}
+                      </div>
                       <div className="text-xs text-gray-500">
                         {appointment.date} • {appointment.time}
                       </div>

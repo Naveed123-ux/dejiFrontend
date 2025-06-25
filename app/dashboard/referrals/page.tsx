@@ -101,9 +101,9 @@ export default function Referrals() {
 
   return (
     <div className="space-y-4 sm:space-y-6 min-w-7xl">
-      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5">
+      <div className="bg-white rounded-lg shadow-sm pb-3 sm:pb-5 max-w-[90%] mx-auto">
         <div className="p-3 sm:p-4">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-20">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-20 ">
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
               Referrals
             </h1>
@@ -145,155 +145,91 @@ export default function Referrals() {
               <p>No patients found.</p>
             </div>
           ) : (
-            <Table className="overflow-x-scroll max-md:flex max-md:flex-row">
-              <TableHeader className=" min-w-10 ">
-                <TableRow className="bg-gray-200  max-md:flex max-md:flex-col">
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    REGISTRATION
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    NAME
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    PHONE NO:
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    CASE
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    STATUS
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    DOCUMENTS
-                  </TableHead>
-                  {activeTab === "Pending" && (
+            <div className="">
+              <Table className="overflow-x-scroll max-md:flex max-md:flex-row    ">
+                <TableHeader className=" min-w-10 ">
+                  <TableRow className="bg-gray-200  max-md:flex max-md:flex-col">
                     <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                      AcceptPatient
+                      REGISTRATION
                     </TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="max-md:flex max-md:flex-row max-w-[50vw] overflow-x-scroll">
-                {patientsData.map((patient: Patient, index: number) => (
-                  <TableRow
-                    key={index}
-                    className="border-b-0 max-md:flex max-md:flex-col"
-                  >
-                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
-                      {patient.registration === null
-                        ? "N/A"
-                        : patient.registration}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                      {patient.name}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                      {patient.phonenumber}
-                    </TableCell>
-                    <TableCell className="text-xs sm:text-sm whitespace-nowrap">
-                      {patient.case}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge
-                        className={`${getStatusColor(
-                          patient.status || ""
-                        )} text-xs`}
-                      >
-                        {patient.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      <Badge
-                        className={`${getDocumentColor(
-                          patient.documents || ""
-                        )} text-xs`}
-                      >
-                        {patient.documents}
-                      </Badge>
-                    </TableCell>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      NAME
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      PHONE NO:
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      CASE
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      STATUS
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                      DOCUMENTS
+                    </TableHead>
                     {activeTab === "Pending" && (
-                      <TableCell className="whitespace-nowrap">
-                        <Button
-                          size="sm"
-                          className="text-xs"
-                          disabled={accept}
-                          onClick={() => acceptFunction(patient.insuranceID)}
-                        >
-                          Accept Patient
-                        </Button>
-                      </TableCell>
+                      <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                        ACCEPT
+                      </TableHead>
                     )}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody className="max-md:flex max-md:flex-row max-w-[50vw] overflow-x-scroll">
+                  {patientsData.map((patient: Patient, index: number) => (
+                    <TableRow
+                      key={index}
+                      className="border-b-0 max-md:flex max-md:flex-col justify-center items-center"
+                    >
+                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
+                        {patient.registration === null
+                          ? "N/A"
+                          : patient.registration}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.name}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.phonenumber}
+                      </TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {patient.case}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge
+                          className={`${getStatusColor(
+                            patient.status || ""
+                          )} text-xs`}
+                        >
+                          {patient.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <Badge
+                          className={`${getDocumentColor(
+                            patient.documents || ""
+                          )} text-xs`}
+                        >
+                          {patient.documents}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="">
+                        {activeTab === "Pending" && (
+                          <Button
+                            disabled={accept}
+                            onClick={() => acceptFunction(patient.insuranceID)}
+                            className="text-xs bg-blue400 text-white rounded-md px-2 py-2"
+                          >
+                            Accept
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {/* <div className="flex flex-col sm:flex-row items-center justify-between mt-4 px-2 sm:px-4 gap-4">
-          <div className="flex items-center order-2 sm:order-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="h-8 rounded-none text-xs"
-            >
-              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Previous</span>
-            </Button>
-            <div className="flex">
-              {[1, 2, 3, 4, 5].map((page) => (
-                <Button
-                  key={page}
-                  variant={currentPage === page ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(page)}
-                  className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-none text-xs"
-                >
-                  {page}
-                </Button>
-              ))}
-              <span className="px-1 sm:px-2 py-1 text-xs text-gray-500">
-                ...
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-none text-xs"
-              >
-                10
-              </Button>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              className="h-8 rounded-none text-xs"
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center space-x-2 order-1 sm:order-2">
-            <span className="text-xs sm:text-sm text-gray-500">Page</span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-12 sm:w-16 h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2">2</SelectItem>
-                <SelectItem value="5">5</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="text-xs sm:text-sm text-gray-500">of 34</span>
-          </div>
-        </div> */}
       </div>
     </div>
   );

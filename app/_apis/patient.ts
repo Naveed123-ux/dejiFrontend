@@ -31,7 +31,8 @@ export const createNote = async (data: NotesPayload) => {
     response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.detail ?? "error creating note");
+      console.log("Errro");
+      throw new Error(error.response?.data?.detail || "error creating note");
     }
     throw new Error("Error creating note");
   }

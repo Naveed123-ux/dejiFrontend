@@ -97,7 +97,7 @@ type SelfcareDeficitFormValues = yup.InferType<
 >;
 
 // SelfcareDeficitForm functional component
-const SelfcareDeficitForm = ({patientId}:{patientId:number}) => {
+const SelfcareDeficitForm = ({ patientId }: { patientId: number }) => {
   const [loading, setLoading] = useState(false);
   // Initialize useForm hook with Yup resolver and default values
   const {
@@ -159,11 +159,15 @@ const SelfcareDeficitForm = ({patientId}:{patientId:number}) => {
       toast.success("Note created successfully!");
     } catch (error) {
       console.error("Error creating note:", error);
-      toast.error(
-        typeof error === "string"
-          ? error
-          : "Failed to create note. Please try again."
-      );
+      let errorMessage = "Failed to create note. Please try again.";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
       toast.dismiss(loadingID);

@@ -139,3 +139,12 @@ export interface AlcoholBenzoFormSubmissionData {
     motivatedForDetoxRehab: "ambivalent" | "yes" | "no";
   };
 }
+
+export interface UserInfo {
+  id: number;
+  fullname: string;
+  email: string;
+  mobile_number: string;
+  dob: string;
+  role: string;
+}

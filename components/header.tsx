@@ -13,8 +13,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSelector } from "react-redux";
+import { fetchUserInfo, logout } from "@/store/slices/AuthSlice";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store/store";
+import { useRouter } from "next/navigation";
+import { clearSelectedPatient } from "@/store/slices/CurrentPatient";
+import toast from "react-hot-toast";
 
 export function Header() {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const { user } = useSelector((state: any) => state.auth);
+  useEffect(() => {
+    if (!user?.fullname) {
+      dispatch(fetchUserInfo());
+    }
+  }, []);
+
+  function logOut() {
+    dispatch(logout());
+    dispatch(clearSelectedPatient());
+    toast.success("Logged out successfully!");
+    document.cookie = "token=; path=/; max-age=0";
+    router.push("/");
+  }
   return (
     <header className="px-2 sm:px-6 py-4">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -40,7 +64,11 @@ export function Header() {
         <div className="flex items-center space-x-2 sm:space-x-4 order-2 md:order-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-8 w-8 sm:h-10 sm:w-10"
+              >
                 <Bell
                   className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600"
                   style={{ fill: "#0D0D0DBF" }}
@@ -130,7 +158,7 @@ export function Header() {
                   <AvatarFallback>U1</AvatarFallback>
                 </Avatar>
                 <span className="text-xs sm:text-sm font-medium text-gray-700 hidden sm:inline">
-                  User 001
+                  {user?.fullname || "..."}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -141,11 +169,16 @@ export function Header() {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => logOut()}>
+                Log out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
     </header>
   );
+}
+function dispatch(arg0: any) {
+  throw new Error("Function not implemented.");
 }

@@ -246,11 +246,18 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2 ">
               {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title} className="inline-flex">
+                <SidebarMenuItem
+                  key={item.title}
+                  className="inline-flex justify-center"
+                >
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url}
-                    className="text-white hover:bg-white/20 data-[active=true]:bg-white/30 data-[active=true]:text-white h-16 text-sm px-2 inline-flex items-center transition-all duration-200"
+                    isActive={
+                      item.url === "/"
+                        ? pathname === "/" || pathname === "/dashboard"
+                        : pathname.startsWith(item.url)
+                    }
+                    className="text-white  w-fit hover:bg-white/20 data-[active=true]:bg-white/30 data-[active=true]:text-white h-16 text-sm px-2 inline-flex items-center transition-all duration-200"
                   >
                     <Link
                       href={item.url}
@@ -266,9 +273,9 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
+              <SidebarMenuItem className="inline-flex justify-center">
                 <SidebarMenuButton
-                  className="text-white hover:bg-white/20 h-16 text-sm justify-center px-4 transition-all duration-200"
+                  className="text-white hover:bg-white/20 h-16 text-sm justify-center px-4 transition-all duration-200 w-fit"
                   onClick={() => logOut()}
                 >
                   <div className="flex flex-col items-center gap-2 py-2">

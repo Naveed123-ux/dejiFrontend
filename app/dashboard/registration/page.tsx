@@ -60,7 +60,7 @@ export default function Registration() {
     resolver: yupResolver(registrationSchema),
   });
   const [loading, setLoading] = useState(false);
-  
+
   const registerPatient = async (
     data: yup.InferType<typeof registrationSchema>
   ) => {
@@ -73,27 +73,41 @@ export default function Registration() {
       console.log("Registration submitted:", data);
       toast.success("patient registered successfully");
     } catch (error) {
-      console.error("Registration error:", error);
-      toast.error(typeof error === "string" ? error : "Registration failed");
+      let errorMessage = "Failed to create note. Please try again.";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
       reset();
       toast.dismiss(loadingId);
     }
   };
-  
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="bg-white rounded-lg shadow-sm px-2 sm:px-3 py-4">
         <div className="px-2 sm:px-0">
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Registration</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            Registration
+          </h1>
         </div>
 
         <div className="border-secondary1 m-2 py-4 sm:py-6 px-2 sm:px-4 border rounded-lg">
-          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit(registerPatient)}>
+          <form
+            className="space-y-4 sm:space-y-6"
+            onSubmit={handleSubmit(registerPatient)}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <Label htmlFor="fullname" className="text-sm sm:text-base">Full Name</Label>
+                <Label htmlFor="fullname" className="text-sm sm:text-base">
+                  Full Name
+                </Label>
                 <Input
                   id="fullname"
                   placeholder="Aahsham Iqbal"
@@ -106,9 +120,11 @@ export default function Registration() {
                   </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="text-sm sm:text-base">Date Of Birth</Label>
+                <Label htmlFor="dateOfBirth" className="text-sm sm:text-base">
+                  Date Of Birth
+                </Label>
                 <Input
                   id="dateOfBirth"
                   placeholder="09/12/2001"
@@ -117,12 +133,16 @@ export default function Registration() {
                   className="bg-gray150 border-none h-10 sm:h-12"
                 />
                 {errors.dob && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.dob?.message}</p>
+                  <p className="text-red-500 text-xs sm:text-sm">
+                    {errors.dob?.message}
+                  </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="race" className="text-sm sm:text-base">Race</Label>
+                <Label htmlFor="race" className="text-sm sm:text-base">
+                  Race
+                </Label>
                 <Input
                   id="race"
                   placeholder="African Black"
@@ -130,12 +150,16 @@ export default function Registration() {
                   className="bg-gray150 border-none h-10 sm:h-12"
                 />
                 {errors.race && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.race?.message}</p>
+                  <p className="text-red-500 text-xs sm:text-sm">
+                    {errors.race?.message}
+                  </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="phoneNumber" className="text-sm sm:text-base">Phone Number</Label>
+                <Label htmlFor="phoneNumber" className="text-sm sm:text-base">
+                  Phone Number
+                </Label>
                 <Input
                   id="phoneNumber"
                   placeholder="+123 456 789"
@@ -149,10 +173,12 @@ export default function Registration() {
                 )}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-start">
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm sm:text-base">Address</Label>
+                <Label htmlFor="address" className="text-sm sm:text-base">
+                  Address
+                </Label>
                 <Textarea
                   id="address"
                   placeholder=""
@@ -160,10 +186,12 @@ export default function Registration() {
                   className="bg-gray150 min-h-[80px] border-none"
                 />
                 {errors.address && (
-                  <p className="text-red-500 text-xs sm:text-sm">{errors.address?.message}</p>
+                  <p className="text-red-500 text-xs sm:text-sm">
+                    {errors.address?.message}
+                  </p>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <Label className="text-sm sm:text-base">Veteran</Label>
@@ -178,11 +206,15 @@ export default function Registration() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="yes" id="veteran-yes" />
-                          <Label htmlFor="veteran-yes" className="text-sm">Yes</Label>
+                          <Label htmlFor="veteran-yes" className="text-sm">
+                            Yes
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="no" id="veteran-no" />
-                          <Label htmlFor="veteran-no" className="text-sm">No</Label>
+                          <Label htmlFor="veteran-no" className="text-sm">
+                            No
+                          </Label>
                         </div>
                       </RadioGroup>
                     )}
@@ -207,11 +239,15 @@ export default function Registration() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="yes" id="active-yes" />
-                          <Label htmlFor="active-yes" className="text-sm">Yes</Label>
+                          <Label htmlFor="active-yes" className="text-sm">
+                            Yes
+                          </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="no" id="active-no" />
-                          <Label htmlFor="active-no" className="text-sm">No</Label>
+                          <Label htmlFor="active-no" className="text-sm">
+                            No
+                          </Label>
                         </div>
                       </RadioGroup>
                     )}
@@ -227,7 +263,12 @@ export default function Registration() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <Label htmlFor="emergencycontact" className="text-sm sm:text-base">Emergency Contact</Label>
+                <Label
+                  htmlFor="emergencycontact"
+                  className="text-sm sm:text-base"
+                >
+                  Emergency Contact
+                </Label>
                 <Input
                   id="emergencycontact"
                   placeholder="Mother, Father etc."
@@ -240,9 +281,12 @@ export default function Registration() {
                   </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="primaryCareProvider" className="text-sm sm:text-base">
+                <Label
+                  htmlFor="primaryCareProvider"
+                  className="text-sm sm:text-base"
+                >
                   Primary Care Provider
                 </Label>
                 <Input
@@ -257,9 +301,11 @@ export default function Registration() {
                   </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="insuranceid" className="text-sm sm:text-base">Insurance ID</Label>
+                <Label htmlFor="insuranceid" className="text-sm sm:text-base">
+                  Insurance ID
+                </Label>
                 <Input
                   id="insuranceid"
                   placeholder="1 1 - 4 2 2 3 4 7"
@@ -272,9 +318,12 @@ export default function Registration() {
                   </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="behavioralHealthProvider" className="text-sm sm:text-base">
+                <Label
+                  htmlFor="behavioralHealthProvider"
+                  className="text-sm sm:text-base"
+                >
                   Behavioral Health Provider
                 </Label>
                 <Input

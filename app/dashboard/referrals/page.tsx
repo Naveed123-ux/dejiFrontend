@@ -212,8 +212,9 @@ export default function Referrals() {
                           {patient.documents}
                         </Badge>
                       </TableCell>
-                      <TableCell className="">
-                        {activeTab === "Pending" && (
+
+                      {activeTab === "Pending" && (
+                        <TableCell className="">
                           <Button
                             disabled={accept}
                             onClick={() => acceptFunction(patient.insuranceID)}
@@ -221,8 +222,8 @@ export default function Referrals() {
                           >
                             Accept
                           </Button>
-                        )}
-                      </TableCell>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

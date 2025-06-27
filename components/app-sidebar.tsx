@@ -233,11 +233,17 @@ export function AppSidebar() {
   const dispatch = useDispatch();
   const router = useRouter();
   function logOut() {
+    console.log("looget out");
+
     dispatch(logout());
     dispatch(clearSelectedPatient());
+    console.log("looge out");
     toast.success("Logged out successfully!");
     document.cookie = "token=; path=/; max-age=0";
-    router.push("/");
+    if (typeof window !== undefined) {
+      window.location.href = "/";
+    }
+    console.log();
   }
   return (
     <Sidebar className="bg-gradient-to-b from-blue-400 to-blue-600 border-r-0">

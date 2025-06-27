@@ -40,10 +40,11 @@ export default function Login() {
   const router = useRouter();
 
   const signIn = async (data: yup.InferType<typeof signInSchema>) => {
+    let toastingId;
     try {
       setLoading(true);
       console.log("Login submitted:");
-      toast.loading("Logging in...");
+      toastingId = toast.loading("Logging in...");
       const response = await SignIn(data);
       console.log("Login response:", response);
       toast.success("Login successful!");
@@ -57,10 +58,18 @@ export default function Login() {
       );
       router.push("/");
     } catch (error) {
-      toast.error("Login failed. Please check your credentials.");
       console.error("Login error:", error);
+      let errorMessage = "Failed to create note. Please try again.";
+
+      if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     } finally {
-      toast.dismiss();
+      toast.dismiss(toastingId);
       setLoading(false);
     }
   };

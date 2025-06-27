@@ -44,7 +44,7 @@ export default function Dashboard() {
   const { user } = useSelector((state: any) => state.auth);
 
   const { data, loading, error } = useSelector((state: any) => state.patients);
-
+  console.log("aptients", data);
   useEffect(() => {
     if (!didFetch.current) {
       dispatch(fetchPatients());
@@ -57,7 +57,7 @@ export default function Dashboard() {
           return patient.status === "completed";
         })
       );
-    } else {
+    } else if (activeTab == "outpatients") {
       setPatientsData(
         data.filter((patient: Patient) => {
           return patient.status === "pending";
@@ -178,7 +178,7 @@ export default function Dashboard() {
                     <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                       DOCUMENTS
                     </TableHead>
-                    {activeTab === "inpatients" && (
+                    {activeTab === "outpatients" && (
                       <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                         AddNote
                       </TableHead>
@@ -223,8 +223,9 @@ export default function Dashboard() {
                           {patient.documents}
                         </Badge>
                       </TableCell>
-                      <TableCell className=" ">
-                        {activeTab === "inpatients" && (
+
+                      {activeTab === "outpatients" && (
+                        <TableCell>
                           <button
                             onClick={() =>
                               addNote(
@@ -237,8 +238,8 @@ export default function Dashboard() {
                           >
                             AddNote
                           </button>
-                        )}
-                      </TableCell>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

@@ -233,7 +233,7 @@ export function AppSidebar() {
   const dispatch = useDispatch();
   const router = useRouter();
   function logOut() {
-    console.log("looget out");
+    console.log("looet out");
 
     dispatch(logout());
     dispatch(clearSelectedPatient());

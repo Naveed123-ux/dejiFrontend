@@ -12,7 +12,7 @@ export const patientRegister = async (data: PatientRegistration) => {
   try {
     const response = await privateApi.post("/register-patient", data);
     return response.data;
-    console.log("Patient registered successfully:", response.data);
+    console.log("Patient registeed successfuly:", response.data);
   } catch (error) {
     if (axios.isAxiosError(error)) {
       throw new Error(
